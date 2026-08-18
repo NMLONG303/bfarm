@@ -22,15 +22,19 @@ app_include_js = "/assets/bfarm/js/bfarm.js"
 # ----------
 
 # application home page
-home_page = "app/bfarm-agriculture"
+home_page = "desk"
 
 # website user home page (by Role)
 role_home_page = {
-	"System Manager": "app/bfarm-agriculture",
-	"Administrator": "app/bfarm-agriculture",
-	"Agriculture User": "app/bfarm-agriculture",
-	"All": "app/bfarm-agriculture"
+	"System Manager": "desk/bfarm-agriculture",
+	"Administrator": "desk/bfarm-agriculture",
+	"Agriculture User": "desk/bfarm-agriculture",
+	"All": "desk/bfarm-agriculture"
 }
+
+# Installation
+# ------------
+after_migrate = "bfarm.bfarm.setup.sync_workspaces"
 
 # Domains
 # -------
