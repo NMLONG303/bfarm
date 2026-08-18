@@ -19,7 +19,7 @@ jobs:
           # Dẫn tới thư mục chứa app trên Server LAN của bạn
           cd ~/frappe/beeyond/apps
           git fetch origin
-          git pull origin production
+          git pull origin main
           
           cd ~/frappe/beeyond
           bench --site bfarm migrate
