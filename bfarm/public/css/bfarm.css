@@ -1,0 +1,57 @@
+/* Custom Styling for Bfarm Agriculture */
+
+/* Cải thiện giao diện thanh Navbar */
+.navbar {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #e8f5e9 !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02) !important;
+}
+
+.bfarm-logo-text {
+    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    transition: transform 0.2s ease;
+}
+
+.bfarm-logo-text:hover {
+    transform: scale(1.03);
+}
+
+.bfarm-logo-text svg {
+    color: #4caf50;
+    animation: leafPulse 3s infinite ease-in-out;
+}
+
+@keyframes leafPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); color: #2e7d32; }
+    100% { transform: scale(1); }
+}
+
+/* Tùy chỉnh hover card trong Workspace */
+.widget-card {
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    border: 1px solid #f1f8e9 !important;
+}
+
+.widget-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(46, 125, 50, 0.08) !important;
+    border-color: #c8e6c9 !important;
+}
+
+.widget-card .widget-head .widget-title {
+    color: #1b5e20 !important;
+    font-weight: 600 !important;
+}
+
+/* Các link nhỏ trong card */
+.widget-link {
+    transition: padding-left 0.2s ease, color 0.2s ease !important;
+}
+
+.widget-link:hover {
+    padding-left: 6px !important;
+    color: #2e7d32 !important;
+    background-color: #f1f8e9 !important;
+    border-radius: 4px;
+}
