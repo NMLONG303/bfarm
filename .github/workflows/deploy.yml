@@ -1,0 +1,30 @@
+name: Deploy to Local LAN Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    # Đổi ubuntu-latest thành self-hosted
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Pull code & Deploy on LAN Server
+        run: |
+          # Dẫn tới thư mục chứa app trên Server LAN của bạn
+          cd ~/frappe/beeyond/apps/bfarm
+          
+          git pull origin production
+          
+          cd ~/frappe/beeyond
+          bench --site bfarm migrate
+          bench clear-cache
+          bench restart
+          
+          # Hoặc lệnh restart cho Node.js/Python:
+          # pm2 restart all
