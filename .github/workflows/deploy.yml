@@ -18,7 +18,7 @@ jobs:
         run: |
           # Dẫn tới thư mục chứa app trên Server LAN của bạn
           cd ~/frappe/beeyond/apps
-          
+          git fetch origin
           git pull origin production
           
           cd ~/frappe/beeyond
