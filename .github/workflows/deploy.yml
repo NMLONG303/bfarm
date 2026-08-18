@@ -22,9 +22,15 @@ jobs:
           git pull origin main
           
           cd ~/frappe/beeyond
-          bench --site bfarm migrate
-          bench clear-cache
-          bench restart
+          # Tự động build assets cho app bfarm
+          bench build --app bfarm
           
-          # Hoặc lệnh restart cho Node.js/Python:
-          # pm2 restart all
+          # Thực thi migrate cho site bfarm để đồng bộ database và Workspace
+          bench --site bfarm migrate
+          
+          # Xoá cache của hệ thống và website để áp dụng thay đổi
+          bench clear-cache
+          bench clear-website-cache
+          
+          # Khởi động lại hệ thống
+          bench restart
