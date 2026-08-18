@@ -1,6 +1,6 @@
 __version__ = '0.0.1'
 
-import frappe
+#import frappe
 
 data = {
     "desktop_icons": [

@@ -4,7 +4,7 @@ with open("requirements.txt") as f:
 	install_requires = f.read().strip().split("\n")
 
 # get version from __version__ variable in bfarm/__init__.py
-from bfarm import __version__ as version
+version = "0.0.1"
 
 setup(
 	name="bfarm",
