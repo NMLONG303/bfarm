@@ -173,7 +173,7 @@ $(document).ready(function() {
 
             setTimeout(function() {
                 if (frappe.set_route) {
-                    frappe.set_route("Workspaces", "Bfarm Agriculture").then(function() {
+                    frappe.set_route("bfarm-agriculture").then(function() {
                         is_redirecting = false;
                     }).catch(function() {
                         is_redirecting = false;
