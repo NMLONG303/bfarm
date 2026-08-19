@@ -122,11 +122,20 @@ $(document).ready(function() {
         }
     }
 
-    // Tự động đóng popup thông báo lỗi 404 "Page desk/bfarm-agriculture not found"
+    // Tự động chuyển hướng nếu đang ở URL cũ /desk/
+    if (window.location.pathname.indexOf("/desk/") !== -1) {
+        let new_path = window.location.pathname.replace("/desk/", "/app/");
+        if (window.location.pathname.indexOf("bfarm-agriculture") === -1 && !window.location.hash) {
+            new_path = "/app/bfarm-agriculture";
+        }
+        window.location.replace(new_path);
+    }
+
+    // Tự động đóng popup thông báo lỗi 404 không tìm thấy trang
     let dismiss_not_found_popups = function() {
         $(".msgprint-dialog, .modal-dialog").each(function() {
             let txt = $(this).text();
-            if (txt.indexOf("desk/bfarm-agriculture not found") !== -1 || txt.indexOf("Page desk/bfarm-agriculture") !== -1) {
+            if (txt.indexOf("bfarm-agriculture not found") !== -1 || txt.indexOf("Page bfarm-agriculture") !== -1 || txt.indexOf("desk/bfarm-agriculture") !== -1) {
                 let $modal = $(this).closest(".modal");
                 $modal.modal("hide");
                 $modal.remove();
@@ -156,11 +165,9 @@ $(document).ready(function() {
         if (is_target && !is_desktop_dom) return;
 
         let is_desktop_route = first_route === "desktop" || 
-            first_route === "desk" || 
             first_route === "apps" || 
             first_route === "home" || 
             current_route === "desktop" || 
-            current_route === "desk" || 
             current_route === "apps" || 
             current_route === "home" || 
             !current_route;
@@ -175,25 +182,15 @@ $(document).ready(function() {
             $(".desktop-container, .icons-container").remove();
             $("#page-desktop").hide();
 
-            setTimeout(function() {
-                if (window.location.pathname.indexOf("bfarm-agriculture") !== -1) {
-                    // Nếu URL đã là /desk/bfarm-agriculture nhưng DOM vẫn kẹt ở màn Desktop icons,
-                    // reset current_route = null và ép Router thực thi lại ngay lập tức
-                    if (frappe.router) {
-                        frappe.router.current_route = null;
-                        frappe.router.route();
-                    }
+            if (frappe.set_route) {
+                frappe.set_route("bfarm-agriculture").then(function() {
                     is_redirecting = false;
-                } else if (frappe.set_route) {
-                    frappe.set_route("bfarm-agriculture").then(function() {
-                        is_redirecting = false;
-                    }).catch(function() {
-                        is_redirecting = false;
-                    });
-                } else {
+                }).catch(function() {
                     is_redirecting = false;
-                }
-            }, 50);
+                });
+            } else {
+                is_redirecting = false;
+            }
         }
     };
 
@@ -202,7 +199,7 @@ $(document).ready(function() {
         check_and_redirect_home();
     });
 
-    // 2. Chặn Router change khi bất kỳ nút nào (như Logo/Home) kích hoạt route "home"/"desk"
+    // 2. Chặn Router change khi bất kỳ nút nào (như Logo/Home) kích hoạt route "home"
     if (frappe.router) {
         frappe.router.on("change", function() {
             check_and_redirect_home();

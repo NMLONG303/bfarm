@@ -203,11 +203,11 @@ Trước khi commit code, lập trình viên phải:
 
 Cơ chế BẮT BUỘC (đã xác minh 2026-08-19) — làm theo đúng thứ tự, KHÔNG dùng boot override:
 
-1. **Redirect sau đăng nhập**: Khai báo `role_home_page = {"System Manager": "/desk/bfarm-agriculture", "Administrator": "...", "Agriculture User": "...", "All": "/desk/bfarm-agriculture"}` trong `hooks.py`.
-   - `auth.py::set_user_info` (dòng 211) gọi `get_home_page()` → `get_home_page_via_hooks()` (frappe/website/utils.py:156-161) lấy giá trị theo role rồi `.strip("/")` → trả `"desk/bfarm-agriculture"`.
-   - Login page dùng core `templates/includes/login/login.js::handler 200` (dòng 325): `window.location.href = ... || data.home_page` → độ phân giải tương đối từ `/login` thành `/desk/bfarm-agriculture`.
-   - **CẢNH BÁO**: `bootinfo.default_route` / `default_path` / `user.default_route` do `boot_session` ghi vào là **VÔ DỤNG** — frontend Desk không đọc bất kỳ field nào trong số đó. Đã xóa khỏi `boot.py`. Nếu user set `default_workspace` trong hồ sơ, `get_home_page()` (utils.py:133-136) ưu tiên nó và trả `/desk/<slug>`.
-2. **Workspace phải tồn tại trong boot**: `restrict_to_domain` của workspace `bfarm_agriculture.json` phải là `""` (rỗng). Nếu để `"Agriculture"` mà Domain Agriculture chưa active, `frappe/desk/desktop.py::get_workspaces` (dòng 449-459) lọc workspace khỏi `frappe.boot.workspaces` với user thường → `/desk/bfarm-agriculture` render rỗng (chỉ còn shell + icon app). `setup.py::sync_workspaces` cũng ép `doc.restrict_to_domain = ""` cho bản ghi DB có sẵn.
+1. **Redirect sau đăng nhập**: Khai báo `role_home_page = {"System Manager": "/app/bfarm-agriculture", "Administrator": "...", "Agriculture User": "...", "All": "/app/bfarm-agriculture"}` trong `hooks.py`.
+   - `auth.py::set_user_info` (dòng 211) gọi `get_home_page()` → `get_home_page_via_hooks()` (frappe/website/utils.py:156-161) lấy giá trị theo role rồi `.strip("/")` → trả `"app/bfarm-agriculture"`.
+   - Login page dùng core `templates/includes/login/login.js::handler 200` (dòng 325): `window.location.href = ... || data.home_page` → điều hướng trực tiếp về `/app/bfarm-agriculture`.
+   - **CẢNH BÁO**: `bootinfo.default_route` / `default_path` / `user.default_route` do `boot_session` ghi vào là **VÔ DỤNG** — frontend Desk không đọc bất kỳ field nào trong số đó. Đã xóa khỏi `boot.py`. Nếu user set `default_workspace` trong hồ sơ, `get_home_page()` (utils.py:133-136) ưu tiên nó và trả `/app/<slug>`.
+2. **Workspace phải tồn tại trong boot**: `restrict_to_domain` của workspace `bfarm_agriculture.json` phải là `""` (rỗng). Nếu để `"Agriculture"` mà Domain Agriculture chưa active, `frappe/desk/desktop.py::get_workspaces` (dòng 449-459) lọc workspace khỏi `frappe.boot.workspaces` với user thường → `/app/bfarm-agriculture` render rỗng (chỉ còn shell + icon app). `setup.py::sync_workspaces` cũng ép `doc.restrict_to_domain = ""` cho bản ghi DB có sẵn.
 3. **Frontend fallback (`bfarm.js`)**: bắt sự kiện Router + `app_ready` để chuyển route về `bfarm-agriculture` — chỉ là lớp phụ trợ, không được phụ thuộc vào nó (asset có thể 404 nếu chưa build).
 4. **Đừng cố dùng `extend_bootinfo`**: hook chạy ở `frappe/sessions.py` dòng 169 TRƯỚC khi `bootinfo["apps_data"]` được tạo (dòng 176-180) nên luôn `False`; kể cả khi ghi được, client cũng không đọc `apps_data.default_path`. Đã xóa.
 5. Sau khi deploy change: chạy `bench migrate` (để `sync_workspaces` ép lại restrict_to_domain) + `bench clear-cache` (xóa cache `home_page:{user}` nếu từng cache `"desk"`).
@@ -218,10 +218,11 @@ Chuỗi xử lý khi submit form login:
 1. `login.js::bind_events` → POST `/api/method/login`.
 2. Server `frappe/auth.py::LoginManager.login` → `frappe.clear_cache(user=usr)` (xóa cache user, buộc rebuild boot) → `authenticate` → `post_login`.
 3. `post_login`: `run_trigger("on_login")` (frappe `_get_unseen_notes` + agriculture `validate_login_role` + bfarm `bfarm.bfarm.auth.on_login`) → `make_session` (ghi tabSessions) → `setup_boot_cache` → `set_user_info` → **`get_home_page()`** → ghi `frappe.local.response["home_page"]`.
-4. `login.js` handler 200 (dòng 325): `window.location.href = sanitise_redirect(get_url_arg("redirect-to")) || data.home_page;` rồi full-page load `/desk/bfarm-agriculture`, desk GET rebuild boot (đây là "lag" chính: ~1-6s với site 4 app khi cache lạnh).
+4. `login.js` handler 200 (dòng 325): `window.location.href = sanitise_redirect(get_url_arg("redirect-to")) || data.home_page;` rồi full-page load `/app/bfarm-agriculture`.
 
 **Các lỗi thực tế đã sửa (chỉ trong app bfarm):**
-- **Redirect sau login bằng URL tương đối**: `get_home_page()` `.strip("/")` trả `"desk/bfarm-agriculture"` (thiếu `/` đầu) → phụ thuộc resolution theo URL hiện tại, dễ vỡ/mo hồ. Fix: hook `on_login` trong `bfarm/bfarm/auth.py` set `frappe.local.flags.home_page = "/desk/bfarm-agriculture"` (URL TỤYỆT ĐỐI). `get_home_page()` (utils.py:99-100) trả ngay flag này → navigation ổn định mọi trình duyệt, ĐỒNG THỜI bỏ qua toàn bộ truy vấn DB của `_get_home_page()` (role/portal/hooks/load_user) trong chính request login → giảm lag.
+- **Redirect sau login dùng sai tiền tố /desk/**: Tiền tố `/desk/` không phải đường dẫn chuẩn của Frappe Desk (Desk dùng `/app/`). Khi dùng `/desk/bfarm-agriculture`, Frappe router bị xung đột và rơi vào vòng lặp tải trang vĩnh viễn (stuck loading). Fix: đổi toàn bộ home_page và redirect về `/app/bfarm-agriculture` tuyệt đối trong `hooks.py`, `auth.py`, `index.py`, và `bfarm.js`.
+- **Treo request đăng nhập do gọi boot info đồng bộ trong on_session_creation**: Gọi `frappe.sessions.get()` trong `on_session_creation` khi session chưa commit làm nghẽn thread đăng nhập. Fix: bỏ `frappe.sessions.get()` khỏi `on_session_creation`.
 - **Workspace trống sau login**: `restrict_to_domain` của workspace phải `""` (đã fix ở quy tắc 8) — nếu không `frappe/desk/desktop.py::get_workspaces` lọc nó khỏi boot với user thường.
 - **Assets 404**: chưa chạy `bench build --app bfarm` → `/assets/bfarm/js/bfarm.js` 404 → các override điều hướng client-side (xóa `session_last_route`, chặn desktop icons) không chạy.
 
