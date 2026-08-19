@@ -58,6 +58,38 @@ def sync_workspaces():
 		except Exception:
 			pass
 
+		# Thêm bản dịch Tiếng Việt trực tiếp vào Database (tabTranslation)
+		try:
+			translations = [
+				("Sign In", "Đăng nhập"),
+				("Welcome! Please sign in to continue.", "Chào mừng bạn! Vui lòng đăng nhập để tiếp tục."),
+				("Email", "Email"),
+				("Password", "Mật khẩu"),
+				("Forgot password?", "Quên mật khẩu?"),
+				("Continue", "Đăng nhập"),
+				("Login with Email Link", "Đăng nhập bằng liên kết Email"),
+				("Don't have an account?", "Chưa có tài khoản?"),
+				("Sign up", "Đăng ký"),
+				("Email is required.", "Vui lòng nhập Email."),
+				("Password is required.", "Vui lòng nhập Mật khẩu."),
+				("Send Link", "Gửi liên kết"),
+				("Send login link", "Gửi liên kết đăng nhập"),
+			]
+			for source, target in translations:
+				if not frappe.db.exists("Translation", {"language": "vi", "source_text": source}):
+					doc = frappe.get_doc({
+						"doctype": "Translation",
+						"language": "vi",
+						"source_text": source,
+						"translated_text": target
+					})
+					doc.insert(ignore_permissions=True)
+				else:
+					frappe.db.set_value("Translation", {"language": "vi", "source_text": source}, "translated_text", target)
+			frappe.db.commit()
+		except Exception:
+			pass
+
 		# Xóa các bản copy cá nhân tùy chỉnh (User Workspace) nếu người dùng từng Edit khiến Workspace bị khóa/cũ
 		try:
 			frappe.db.sql("""DELETE FROM `tabWorkspace` WHERE (title = %s OR label = %s OR name LIKE %s) AND (public = 0 OR (for_user IS NOT NULL AND for_user != ''))""", ("Bfarm Agriculture", "Bfarm Agriculture", "%Bfarm Agriculture%"))

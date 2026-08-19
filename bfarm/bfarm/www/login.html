@@ -10,19 +10,16 @@
 {% block head_include %}
 {{ include_style('login.bundle.css') }}
 <style>
-/* Custom Login Page Styling - Màu Xanh Biển (Ocean Blue) hòa hợp với Logo Bfarm */
-body, .page-container {
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%) !important;
-}
-
-.for-login, .for-email-login, .for-signup, .for-forgot, .for-login-with-email-link {
-    background: transparent !important;
+/* Custom Login Page Styling - Nền Trắng Tinh Khôi (#ffffff) & Màu Xanh Biển (Ocean Blue) */
+html, body, .page-container, .page-card-container, .web-footer, .for-login, .for-email-login, .for-signup, .for-forgot, .for-login-with-email-link {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
 }
 
 .login-content.page-card {
     border-radius: 16px !important;
-    box-shadow: 0 10px 25px -5px rgba(2, 132, 199, 0.12), 0 8px 10px -6px rgba(2, 132, 199, 0.08) !important;
-    border: 1px solid #bae6fd !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    border: 1px solid #e5e7eb !important;
     background: #ffffff !important;
     padding: 32px !important;
 }
@@ -84,6 +81,37 @@ body, .page-container {
     color: #0284c7 !important;
 }
 </style>
+<script>
+(function() {
+    function translateLogin() {
+        var map = {
+            "Sign In": "Đăng nhập",
+            "Welcome! Please sign in to continue.": "Chào mừng bạn! Vui lòng đăng nhập để tiếp tục.",
+            "Email": "Email",
+            "Password": "Mật khẩu",
+            "Forgot password?": "Quên mật khẩu?",
+            "Continue": "Đăng nhập",
+            "Login with Email Link": "Đăng nhập bằng liên kết Email",
+            "Don't have an account?": "Chưa có tài khoản?",
+            "Sign up": "Đăng ký",
+            "Back to sign in": "Quay lại đăng nhập",
+            "Send Link": "Gửi liên kết",
+            "Send login link": "Gửi liên kết đăng nhập",
+            "Forgot Password?": "Quên mật khẩu?",
+            "Please enter your email, we'll send you password reset link": "Vui lòng nhập email, chúng tôi sẽ gửi liên kết đặt lại mật khẩu cho bạn."
+        };
+        var elems = document.querySelectorAll('.login-content h4, .login-content p, .login-content label, .login-content button, .login-content a, .es-button');
+        elems.forEach(function(el) {
+            var txt = el.textContent.trim();
+            if (map[txt]) {
+                el.textContent = map[txt];
+            }
+        });
+    }
+    document.addEventListener('DOMContentLoaded', translateLogin);
+    setInterval(translateLogin, 200);
+})();
+</script>
 {% endblock %}
 
 {% macro email_login_body() -%}
