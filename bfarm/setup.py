@@ -105,7 +105,9 @@ def sync_workspaces():
 			doc.sequence_id = data.get("sequence_id", -100.0)
 			doc.icon = data.get("icon", "agriculture")
 			doc.title = data.get("title")
-			doc.restrict_to_domain = data.get("restrict_to_domain")
+			# Bắt buộc bỏ restrict_to_domain domain cũ để workspace luôn nằm trong boot
+			# (get_workspaces lọc theo active domain -> "/desk/bfarm-agriculture" render rỗng với user thường)
+			doc.restrict_to_domain = ""
 			doc.sidebar_items = []
 			for sb in data.get("sidebar_items", []):
 				doc.append("sidebar_items", sb)

@@ -47,23 +47,21 @@ update_website_context = "bfarm.bfarm.boot.update_website_context"
 # ----------
 
 # application home page
-home_page = "desk"
+home_page = "/desk/bfarm-agriculture"
 
 # website user home page (by Role)
+# => get_home_page() trả "desk/bfarm-agriculture" cho tất cả người dùng hệ thống,
+# khiến sau đăng nhập (auth.py set_user_info -> login.js data.home_page) đi thẳng
+# về workspace Bfarm Agriculture mà không cần bfarm.js hay boot override.
 role_home_page = {
-	"System Manager": "desk",
-	"Administrator": "desk",
-	"Agriculture User": "desk",
-	"All": "desk"
+	"System Manager": "/desk/bfarm-agriculture",
+	"Administrator": "/desk/bfarm-agriculture",
+	"Agriculture User": "/desk/bfarm-agriculture",
+	"All": "/desk/bfarm-agriculture"
 }
 
 # Session Boot Hook
 boot_session = "bfarm.bfarm.boot.boot_session"
-
-# Extend Bootinfo - chạy SAU khi Frappe tính xong apps_data để ghi đè default_path
-extend_bootinfo = [
-	"bfarm.bfarm.boot.extend_bootinfo"
-]
 
 # Installation
 # ------------

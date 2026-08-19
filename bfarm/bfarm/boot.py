@@ -3,15 +3,10 @@ import frappe
 def boot_session(bootinfo):
 	"""
 	Hook chạy mỗi khi khởi tạo phiên làm việc (session boot).
-	Ép route mặc định của Desk về "bfarm-agriculture".
+	Chỉ ghi đè branding (logo/ten app) - client không đọc default_route/default_path.
+	Route sau đăng nhập được quyết định bởi role_home_page trong hooks.py.
 	"""
 	if frappe.session.user and frappe.session.user != "Guest":
-		if hasattr(bootinfo, "user") and bootinfo.user:
-			bootinfo.user.default_route = "bfarm-agriculture"
-		bootinfo.default_route = "bfarm-agriculture"
-		# Ép default_path để Frappe client biết phải đi thẳng vào bfarm, không hiện Apps Screen
-		bootinfo.default_path = "/desk/bfarm-agriculture"
-		
 		# Ghi đè logo và tên ứng dụng hệ thống sang Bfarm
 		bootinfo.app_logo_url = "/assets/bfarm/images/logo.png"
 		if hasattr(bootinfo, "app_data") and bootinfo.app_data:
@@ -33,14 +28,3 @@ def update_website_context(context):
 	context["favicon"] = logo_path
 	context["splash_image"] = logo_path
 	context["app_name"] = "Bfarm"
-
-
-def extend_bootinfo(bootinfo, **kwargs):
-	"""
-	Hook extend_bootinfo chạy SAU khi Frappe tính xong apps_data (sessions.py dòng 176-180).
-	Ghi đè apps_data.default_path và default_route để Frappe client-side đi thẳng vào bfarm-agriculture.
-	"""
-	if frappe.session.user and frappe.session.user != "Guest":
-		if "apps_data" in bootinfo:
-			bootinfo["apps_data"]["default_path"] = "/desk/bfarm-agriculture"
-		bootinfo["default_route"] = "bfarm-agriculture"

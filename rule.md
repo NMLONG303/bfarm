@@ -201,10 +201,16 @@ Trước khi commit code, lập trình viên phải:
 
 ### Quy tắc 8 — Cấu hình Điều hướng Trang chủ Mặc định (`bfarm-agriculture`)
 
-Để bắt hệ thống luôn chuyển hướng về `bfarm-agriculture` ở cả 2 trường hợp (Đăng nhập và Click Logo/Home):
-1. **Backend (`boot_session`)**: Khai báo `boot_session = "bfarm.bfarm.boot.boot_session"` trong `hooks.py` và gán `bootinfo.user.default_route = "bfarm-agriculture"`.
-2. **Frontend (`bfarm.js`)**: Bắt sự kiện Router `frappe.router.on("change")` và `app_ready` để chuyển route về `bfarm-agriculture`, đồng thời override sự kiện click vào `.navbar-brand` logo.
-3. **Gộp JS tập trung**: Toàn bộ logic điều hướng JS phải nằm trong `bfarm.js`, không tạo file JS lẻ rác.
+Cơ chế BẮT BUỘC (đã xác minh 2026-08-19) — làm theo đúng thứ tự, KHÔNG dùng boot override:
+
+1. **Redirect sau đăng nhập**: Khai báo `role_home_page = {"System Manager": "/desk/bfarm-agriculture", "Administrator": "...", "Agriculture User": "...", "All": "/desk/bfarm-agriculture"}` trong `hooks.py`.
+   - `auth.py::set_user_info` (dòng 211) gọi `get_home_page()` → `get_home_page_via_hooks()` (frappe/website/utils.py:156-161) lấy giá trị theo role rồi `.strip("/")` → trả `"desk/bfarm-agriculture"`.
+   - Login page dùng core `templates/includes/login/login.js::handler 200` (dòng 325): `window.location.href = ... || data.home_page` → độ phân giải tương đối từ `/login` thành `/desk/bfarm-agriculture`.
+   - **CẢNH BÁO**: `bootinfo.default_route` / `default_path` / `user.default_route` do `boot_session` ghi vào là **VÔ DỤNG** — frontend Desk không đọc bất kỳ field nào trong số đó. Đã xóa khỏi `boot.py`. Nếu user set `default_workspace` trong hồ sơ, `get_home_page()` (utils.py:133-136) ưu tiên nó và trả `/desk/<slug>`.
+2. **Workspace phải tồn tại trong boot**: `restrict_to_domain` của workspace `bfarm_agriculture.json` phải là `""` (rỗng). Nếu để `"Agriculture"` mà Domain Agriculture chưa active, `frappe/desk/desktop.py::get_workspaces` (dòng 449-459) lọc workspace khỏi `frappe.boot.workspaces` với user thường → `/desk/bfarm-agriculture` render rỗng (chỉ còn shell + icon app). `setup.py::sync_workspaces` cũng ép `doc.restrict_to_domain = ""` cho bản ghi DB có sẵn.
+3. **Frontend fallback (`bfarm.js`)**: bắt sự kiện Router + `app_ready` để chuyển route về `bfarm-agriculture` — chỉ là lớp phụ trợ, không được phụ thuộc vào nó (asset có thể 404 nếu chưa build).
+4. **Đừng cố dùng `extend_bootinfo`**: hook chạy ở `frappe/sessions.py` dòng 169 TRƯỚC khi `bootinfo["apps_data"]` được tạo (dòng 176-180) nên luôn `False`; kể cả khi ghi được, client cũng không đọc `apps_data.default_path`. Đã xóa.
+5. Sau khi deploy change: chạy `bench migrate` (để `sync_workspaces` ép lại restrict_to_domain) + `bench clear-cache` (xóa cache `home_page:{user}` nếu từng cache `"desk"`).
 
 ---
 
