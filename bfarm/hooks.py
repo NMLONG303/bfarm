@@ -32,6 +32,9 @@ role_home_page = {
 	"All": "desk/bfarm-agriculture"
 }
 
+# Session Boot Hook
+boot_session = "bfarm.bfarm.boot.boot_session"
+
 # Installation
 # ------------
 after_migrate = "bfarm.bfarm.setup.sync_workspaces"

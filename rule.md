@@ -199,6 +199,13 @@ Trước khi commit code, lập trình viên phải:
 3. Chạy `bench build --app bfarm` trên server và xác nhận không có lỗi
 4. Mở trình duyệt → F12 Console → kiểm tra không có lỗi 404 hoặc TypeError liên quan đến bfarm
 
+### Quy tắc 8 — Cấu hình Điều hướng Trang chủ Mặc định (`bfarm-agriculture`)
+
+Để bắt hệ thống luôn chuyển hướng về `bfarm-agriculture` ở cả 2 trường hợp (Đăng nhập và Click Logo/Home):
+1. **Backend (`boot_session`)**: Khai báo `boot_session = "bfarm.bfarm.boot.boot_session"` trong `hooks.py` và gán `bootinfo.user.default_route = "bfarm-agriculture"`.
+2. **Frontend (`bfarm.js`)**: Bắt sự kiện Router `frappe.router.on("change")` và `app_ready` để chuyển route về `bfarm-agriculture`, đồng thời override sự kiện click vào `.navbar-brand` logo.
+3. **Gộp JS tập trung**: Toàn bộ logic điều hướng JS phải nằm trong `bfarm.js`, không tạo file JS lẻ rác.
+
 ---
 
 ## 4. BẢNG TÓM TẮT LỖI & GIẢI PHÁP
@@ -209,3 +216,5 @@ Trước khi commit code, lập trình viên phải:
 | 2 | CSS/JS bị lỗi 404 | Chưa chạy `bench build` → thiếu symlink `sites/assets/bfarm` | Chạy `bench build --app bfarm` | `sites/assets/` |
 | 3 | Bundle không được đăng ký | `assets.json` không chứa entry của bfarm | Chạy `bench build --app bfarm` | `sites/assets/assets.json` |
 | 4 | Translation vẫn chạy | Translation dùng cơ chế riêng (API + CSV), không phụ thuộc assets | Không cần sửa | — |
+| 5 | Bấm logo nhảy về Home cũ | Route mặc định của Frappe là `home` | Dùng `boot_session` hook + Router Interceptor trong `bfarm.js` | `boot.py`, `hooks.py`, `bfarm.js` |
+

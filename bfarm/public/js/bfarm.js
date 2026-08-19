@@ -3,37 +3,54 @@ $(document).ready(function() {
     let customize_navbar = function() {
         let brand = $(".navbar-brand");
         if (brand.length) {
-            // Đổi logo text trên thanh điều hướng Desk
+            // Đổi logo text và trỏ link trực tiếp về bfarm-agriculture
             brand.html('<span class="bfarm-logo-text" style="font-weight: 700; color: #2e7d32; font-size: 16px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px;"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg> Bfarm Agriculture</span>');
+            
+            // Bắt sự kiện click vào logo navbar để chuyển thẳng tới bfarm-agriculture mà không qua /app/home
+            brand.off("click.bfarm").on("click.bfarm", function(e) {
+                e.preventDefault();
+                frappe.set_route("bfarm-agriculture");
+            });
         }
     };
 
     $(document).on("toolbar_setup", function() {
         customize_navbar();
     });
-
-    // Đảm bảo navbar được chỉnh sửa ngay khi load trang
     setTimeout(customize_navbar, 300);
     setTimeout(customize_navbar, 1000);
 
-    // Chuyển hướng sau login nếu người dùng ở trang chủ mặc định của Desk
-    if (frappe.session.user && frappe.session.user !== "Guest") {
-        let current_route = frappe.get_route_str();
-        console.log("[Bfarm Debug] Current route: ", current_route);
-        
-        let should_redirect = !current_route || 
-            current_route.toLowerCase() === "workspaces/home" || 
-            current_route.toLowerCase() === "home" || 
-            current_route.toLowerCase() === "desk" ||
-            current_route.toLowerCase() === "workspaces";
-            
-        if (should_redirect) {
-            console.log("[Bfarm Debug] Redirecting to bfarm-agriculture...");
-            setTimeout(function() {
+    // Hàm kiểm tra và thực hiện chuyển hướng về bfarm-agriculture
+    let check_and_redirect_home = function() {
+        if (frappe.session && frappe.session.user && frappe.session.user !== "Guest") {
+            let current_route = frappe.get_route_str ? frappe.get_route_str().toLowerCase() : "";
+            let should_redirect = !current_route || 
+                current_route === "workspaces/home" || 
+                current_route === "home" || 
+                current_route === "desk" ||
+                current_route === "workspaces";
+                
+            if (should_redirect) {
+                console.log("[Bfarm Redirect] Intercepted home route -> redirecting to bfarm-agriculture");
                 frappe.set_route("bfarm-agriculture");
-            }, 200);
+            }
         }
+    };
+
+    // 1. Chuyển hướng khi app sẵn sàng
+    $(document).on("app_ready", function() {
+        check_and_redirect_home();
+    });
+
+    // 2. Chặn Router change khi bất kỳ nút nào (như Logo/Home) kích hoạt route "home"
+    if (frappe.router) {
+        frappe.router.on("change", function() {
+            check_and_redirect_home();
+        });
     }
+
+    // 3. Chạy kiểm tra ngay lúc script nạp
+    check_and_redirect_home();
 
     // ==========================================
     // Custom Geolocation Map Zoom (Override)
