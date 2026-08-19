@@ -1,4 +1,5 @@
 {
+ "app": "bfarm",
  "charts": [
   {
    "chart_name": "Completed Projects",

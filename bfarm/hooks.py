@@ -21,8 +21,8 @@ app_include_js = "/assets/bfarm/js/bfarm.js"
 # Home Pages
 # ----------
 
-# application home page (được điều hướng qua www/index.py)
-# home_page = "desk"
+# application home page
+home_page = "desk"
 
 # website user home page (by Role)
 role_home_page = {

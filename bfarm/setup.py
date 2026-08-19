@@ -28,6 +28,7 @@ def sync_workspaces():
 		else:
 			doc = frappe.get_doc("Workspace", name)
 			# Cập nhật nội dung JSON
+			doc.app = data.get("app") or "bfarm"
 			doc.content = data.get("content")
 			doc.charts = []
 			for chart in data.get("charts", []):
