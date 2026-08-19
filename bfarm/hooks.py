@@ -69,6 +69,12 @@ on_login = [
 	"bfarm.bfarm.auth.on_login"
 ]
 
+# Session được tạo xong (make_session) - frappe.session.user đã set
+# => warm boot cache ngay trong POST login để desk GET đầu tiên sau login không rebuild (xem bfarm/auth.py)
+on_session_creation = [
+	"bfarm.bfarm.auth.on_session_creation"
+]
+
 # Installation
 # ------------
 after_migrate = "bfarm.bfarm.setup.sync_workspaces"
