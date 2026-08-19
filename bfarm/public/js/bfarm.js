@@ -137,29 +137,51 @@ $(document).ready(function() {
     setInterval(dismiss_not_found_popups, 300);
 
     // Hàm kiểm tra và thực hiện chuyển hướng về bfarm-agriculture
+    let is_redirecting = false;
     let check_and_redirect_home = function() {
+        if (is_redirecting) return;
         if (!frappe.session || !frappe.session.user || frappe.session.user === "Guest") return;
 
         let current_route = frappe.get_route_str ? frappe.get_route_str().toLowerCase() : "";
         let route_arr = frappe.get_route ? frappe.get_route() : [];
         let first_route = route_arr.length ? String(route_arr[0]).toLowerCase() : "";
 
-        let is_desktop_dom = $(".desktop-container").length > 0 || $(".icons-container").length > 0;
-        let is_target_workspace = current_route.indexOf("bfarm-agriculture") !== -1 || 
+        let is_target = current_route.indexOf("bfarm-agriculture") !== -1 || 
             first_route === "bfarm-agriculture" || 
             (route_arr.length > 1 && String(route_arr[1]).toLowerCase() === "bfarm agriculture");
 
-        if (is_desktop_dom || first_route === "desktop" || current_route === "desktop" || current_route === "desk" || !current_route) {
-            if (!is_target_workspace || is_desktop_dom) {
-                console.log("[Bfarm Redirect] Desktop container detected -> removing desktop DOM and switching to bfarm-agriculture workspace");
-                $(".desktop-container, .icons-container").remove();
-                $("#page-desktop").hide();
-                if (frappe.router) {
-                    frappe.router.current_route = null;
-                    frappe.route_flags.replace_route = true;
-                    frappe.set_route("Workspaces", "Bfarm Agriculture");
+        // Nếu đã ở đúng workspace Bfarm Agriculture thì dừng lại ngay
+        if (is_target) return;
+
+        let is_desktop_route = first_route === "desktop" || 
+            first_route === "desk" || 
+            first_route === "apps" || 
+            first_route === "home" || 
+            current_route === "desktop" || 
+            current_route === "desk" || 
+            current_route === "apps" || 
+            current_route === "home" || 
+            !current_route;
+
+        let is_desktop_dom = $(".desktop-container").length > 0 || $(".icons-container").length > 0;
+
+        if (is_desktop_route || is_desktop_dom) {
+            is_redirecting = true;
+            console.log("[Bfarm Redirect] Redirecting cleanly to bfarm-agriculture workspace...");
+            $(".desktop-container, .icons-container").remove();
+            $("#page-desktop").hide();
+
+            setTimeout(function() {
+                if (frappe.set_route) {
+                    frappe.set_route("Workspaces", "Bfarm Agriculture").then(function() {
+                        is_redirecting = false;
+                    }).catch(function() {
+                        is_redirecting = false;
+                    });
+                } else {
+                    is_redirecting = false;
                 }
-            }
+            }, 50);
         }
     };
 
@@ -175,10 +197,9 @@ $(document).ready(function() {
         });
     }
 
-    // 3. Chạy kiểm tra ngay lập tức lúc nạp và kiểm tra lặp lại 
+    // 3. Chạy kiểm tra ban đầu lúc nạp
     check_and_redirect_home();
     setTimeout(check_and_redirect_home, 300);
-    setTimeout(check_and_redirect_home, 1000);
 
     // ==========================================
     // Custom Geolocation Map Zoom (Override)
