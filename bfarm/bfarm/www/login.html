@@ -104,6 +104,11 @@
             }
         });
     }
+    // Xóa session_last_route cũ ngay khi ở trang login
+    try {
+        localStorage.removeItem("session_last_route");
+        localStorage.removeItem("frappe_last_route");
+    } catch(e) {}
     document.addEventListener('DOMContentLoaded', translateLogin);
     setInterval(translateLogin, 200);
 })();

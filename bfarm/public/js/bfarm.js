@@ -150,8 +150,10 @@ $(document).ready(function() {
             first_route === "bfarm-agriculture" || 
             (route_arr.length > 1 && String(route_arr[1]).toLowerCase() === "bfarm agriculture");
 
-        // Nếu đã ở đúng workspace Bfarm Agriculture thì dừng lại ngay
-        if (is_target) return;
+        let is_desktop_dom = $(".desktop-container").length > 0 || $(".icons-container").length > 0;
+
+        // Nếu đã ở đúng workspace Bfarm Agriculture và KHÔNG bị vướng Desktop DOM thì dừng lại
+        if (is_target && !is_desktop_dom) return;
 
         let is_desktop_route = first_route === "desktop" || 
             first_route === "desk" || 
@@ -163,16 +165,26 @@ $(document).ready(function() {
             current_route === "home" || 
             !current_route;
 
-        let is_desktop_dom = $(".desktop-container").length > 0 || $(".icons-container").length > 0;
-
         if (is_desktop_route || is_desktop_dom) {
             is_redirecting = true;
-            console.log("[Bfarm Redirect] Redirecting cleanly to bfarm-agriculture workspace...");
+            console.log("[Bfarm Redirect] Intercepted desktop screen -> switching to bfarm-agriculture workspace...");
+            try {
+                localStorage.removeItem("session_last_route");
+            } catch(e) {}
+
             $(".desktop-container, .icons-container").remove();
             $("#page-desktop").hide();
 
             setTimeout(function() {
-                if (frappe.set_route) {
+                if (window.location.pathname.indexOf("bfarm-agriculture") !== -1) {
+                    // Nếu URL đã là /desk/bfarm-agriculture nhưng DOM vẫn kẹt ở màn Desktop icons,
+                    // reset current_route = null và ép Router thực thi lại ngay lập tức
+                    if (frappe.router) {
+                        frappe.router.current_route = null;
+                        frappe.router.route();
+                    }
+                    is_redirecting = false;
+                } else if (frappe.set_route) {
                     frappe.set_route("bfarm-agriculture").then(function() {
                         is_redirecting = false;
                     }).catch(function() {
