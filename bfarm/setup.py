@@ -28,15 +28,28 @@ def sync_workspaces():
 		except Exception:
 			pass
 
+		# Xóa các bản copy cá nhân tùy chỉnh (User Workspace) nếu người dùng từng Edit khiến Workspace bị khóa/cũ
+		try:
+			frappe.db.sql("""DELETE FROM `tabWorkspace` WHERE (title = %s OR label = %s OR name LIKE %s) AND (public = 0 OR (for_user IS NOT NULL AND for_user != ''))""", ("Bfarm Agriculture", "Bfarm Agriculture", "%Bfarm Agriculture%"))
+			frappe.db.sql("""DELETE FROM `tabUser Settings` WHERE `data` LIKE %s""", ("%Bfarm Agriculture%",))
+			frappe.db.commit()
+		except Exception:
+			pass
+
 		# Kiểm tra xem Workspace đã tồn tại chưa
 		if not frappe.db.exists("Workspace", name):
 			doc = frappe.get_doc(data)
+			doc.app = data.get("app") or "erpnext"
+			doc.public = 1
+			doc.for_user = ""
 			doc.insert(ignore_permissions=True)
 			frappe.db.commit()
 		else:
 			doc = frappe.get_doc("Workspace", name)
-			# Cập nhật nội dung JSON
-			doc.app = data.get("app") or "bfarm"
+			doc.app = data.get("app") or "erpnext"
+			doc.public = 1
+			doc.for_user = ""
+			doc.is_hidden = 0
 			doc.content = data.get("content")
 			doc.charts = []
 			for chart in data.get("charts", []):
@@ -61,3 +74,7 @@ def sync_workspaces():
 		if frappe.db.exists("Workspace", "Home"):
 			frappe.db.set_value("Workspace", "Home", "is_hidden", 1)
 			frappe.db.commit()
+
+		# Xóa cache server để áp dụng ngay
+		frappe.clear_cache()
+
