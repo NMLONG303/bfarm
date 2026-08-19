@@ -1,98 +1,211 @@
 # Quy tắc và Hướng dẫn Tùy biến Dự án Bfarm (rule.md)
 
-Tài liệu này cung cấp phân tích chi tiết về cấu trúc hệ thống, các module, chức năng và đặt ra các quy tắc phát triển (customization rules) để phục vụ cho việc vận hành và nâng cấp dự án **Bfarm** sau này.
+> **Cảnh báo**: Tài liệu này chứa phân tích lỗi thực tế và các quy tắc BẮT BUỘC.
+> Mọi lập trình viên tùy biến app `bfarm` phải đọc kỹ trước khi code.
 
 ---
 
-## 1. Tổng quan Kiến trúc Hệ thống
+## 1. PHÂN TÍCH LỖI: Tại sao Custom UI (JS/CSS) không hoạt động mà chỉ Translate chạy?
 
-Hệ thống Bfarm bao gồm hai thành phần chính kết nối qua giao thức HTTPS:
-1. **BfarmMobileApp (Frontend di động)**: Viết bằng Kotlin (Jetpack Compose), kết nối trực tiếp với backend qua REST API sử dụng Session Authentication (Cookie-based).
-2. **BfarmWeb/Frappe (Backend & Quản trị)**: Chạy trên nền tảng **Frappe Framework** cùng **ERPNext** và các ứng dụng tùy biến. Đây là nơi quản lý dữ liệu, cung cấp REST API và giao diện quản trị (Desk).
+### 1.1. Nguyên nhân gốc rễ #1 — `frappe.ready()` KHÔNG tồn tại trên Desk
 
----
+**Đây là lỗi nghiêm trọng nhất.**
 
-## 2. Cấu trúc Dự án Web & Backend (`BfarmWeb/frappe/beeyond`)
-
-Thư mục root của backend là một **Frappe Bench** (tên thư mục: `beeyond`). Cấu trúc thư mục chi tiết như sau:
-
-```
-beeyond/
-├── apps/                               # Thư mục chứa mã nguồn các ứng dụng (git repos)
-│   ├── frappe/                         # Core Framework (không được sửa đổi trực tiếp)
-│   ├── erpnext/                        # Core ERP (Task, Project, Item... không sửa trực tiếp)
-│   ├── agriculture/                    # App cung cấp các Doctype nông nghiệp cơ bản của Frappe
-│   └── bfarm/                          # App tùy biến chính của dự án Bfarm (Nơi viết toàn bộ code custom)
-├── sites/                              # Thư mục chứa dữ liệu cấu hình và tệp tải lên của các site
-│   ├── common_site_config.json         # Cấu hình chung của Bench (ports, redis, gunicorn)
-│   └── bfarm/                          # Thư mục site chính: cấu hình riêng, cơ sở dữ liệu và file uploads
-├── env/                                # Môi trường ảo Python (Virtualenv) chứa các thư viện phụ thuộc
-└── logs/                               # Log hoạt động của các tiến trình (worker, web, schedule)
+Toàn bộ code JS custom trong [bfarm.js](bfarm/public/js/bfarm.js) được bọc trong:
+```javascript
+frappe.ready(function() {
+    // ...toàn bộ code navbar, redirect, map override...
+});
 ```
 
+**Vấn đề**: Hàm `frappe.ready()` chỉ được định nghĩa trong template **Website** (`frappe/templates/base.html`, dòng 49):
+```javascript
+frappe.ready = function(fn) {
+    frappe.ready_events.push(fn);
+}
+```
+
+Trên **Desk** (`frappe/www/desk.html`), hàm `frappe.ready` **KHÔNG BAO GIỜ được định nghĩa**.
+Khi trình duyệt thực thi `frappe.ready(function() {...})` trên Desk, nó gọi `undefined(function(){...})` → **TypeError bị nuốt lặng lẽ** → toàn bộ code bên trong bị bỏ qua.
+
+**Giải pháp đã áp dụng**: Thay `frappe.ready(function() {...})` bằng `$(document).ready(function() {...})`.
+jQuery `$(document).ready()` hoạt động đúng trên **cả Desk lẫn Website**.
+
+### 1.2. Nguyên nhân gốc rễ #2 — Thiếu symlink/folder `bfarm` trong `sites/assets/`
+
+Khi kiểm tra thư mục `sites/assets/`, chỉ thấy:
+```
+sites/assets/
+├── frappe       (symlink)
+├── erpnext      (symlink)
+├── assets.json
+├── css/
+├── js/
+└── locale/
+```
+
+**Không có thư mục `bfarm`** → khi trình duyệt tải `/assets/bfarm/js/bfarm.js` và `/assets/bfarm/css/bfarm.css` → **lỗi HTTP 404**.
+
+**Nguyên nhân**: Chưa chạy lệnh `bench build --app bfarm` để Frappe:
+1. Tạo symlink `sites/assets/bfarm → apps/bfarm/bfarm/public`
+2. Đăng ký file tĩnh vào `assets.json`
+
+### 1.3. Nguyên nhân gốc rễ #3 — `assets.json` không chứa entry nào của bfarm
+
+File `sites/assets/assets.json` chỉ chứa bundle của `frappe` và `erpnext`.
+Không có bất kỳ đường dẫn nào trỏ tới `bfarm`.
+
+### 1.4. Tại sao Translation (vi.csv) vẫn hoạt động?
+
+Translation trong Frappe hoạt động qua **cơ chế hoàn toàn khác**:
+- Frappe tải bản dịch từ database/file CSV bằng API `frappe.translate.get_boot_translations`
+- Quá trình này **không phụ thuộc** vào `assets.json`, symlink, hay `frappe.ready()`
+- Chỉ cần app `bfarm` được cài đặt vào site (`installed_apps` trong `site_config.json` chứa `"bfarm"`) → Frappe tự quét file `bfarm/translations/vi.csv` và nạp bản dịch
+
 ---
 
-## 3. Các Ứng dụng Tùy biến và Chức năng Chính
+## 2. CẤU TRÚC DỰ ÁN
 
-### 3.1. Ứng dụng `agriculture` (Nghiệp vụ Nông nghiệp)
-App này đóng vai trò cung cấp các kiểu dữ liệu (DocTypes) chuyên ngành nông nghiệp:
-*   **Các Doctype cốt lõi**: `Crop`, `Crop Cycle`, `Fertilizer`, `Disease`, `Weather`, `Soil Texture`.
-*   **Phân tích & Chỉ số**: `Soil Analysis`, `Water Analysis`, `Plant Analysis`, `Agriculture Analysis Criteria` (chứa hơn 90 chỉ số đo lường đất/nước/khí hậu mặc định).
-*   **Cơ chế xác thực (`agriculture/agriculture/auth.py`)**: Gắn vào hook `on_login` để kiểm tra vai trò của người dùng. Chỉ cho phép các tài khoản có vai trò `Agriculture User` hoặc `Agriculture Manager` (ngoại trừ `Administrator` và `System Manager`) được đăng nhập vào hệ thống nhằm bảo mật API.
-*   **Cấp quyền tự động (`setup.py`)**: Tự động thêm quyền truy cập `Location` cho các vai trò nông nghiệp sau khi cài đặt.
+### 2.1. Tổng quan Kiến trúc
 
-### 3.2. Ứng dụng `bfarm` (Tùy biến Giao diện & Trải nghiệm Bfarm)
-Đây là ứng dụng chứa các mã nguồn tùy chỉnh riêng của dự án Bfarm, đóng vai trò ghi đè (override) và mở rộng tính năng của hệ thống mà không can thiệp vào mã nguồn gốc:
-*   **hooks.py**: Khai báo nạp các tệp CSS và JS tùy biến vào Desk:
-    ```python
-    app_include_css = "/assets/bfarm/css/bfarm.css"
-    app_include_js = "/assets/bfarm/js/bfarm.js"
-    ```
-    Đồng thời đăng ký trang chủ mặc định qua `role_home_page` dẫn tới workspace `bfarm-agriculture`.
-*   **bfarm.js (`bfarm/public/js/bfarm.js`)**: Thực hiện các logic ghi đè phía client:
-    *   *Điều hướng*: Tự động chuyển hướng từ trang chủ Desk sang workspace `bfarm-agriculture` sau khi đăng nhập.
-    *   *Navbar & Brand*: Đổi logo chữ và biểu tượng trên thanh điều hướng Desk thành "Bfarm Agriculture".
-    *   *Custom Geolocation Map Zoom*: Ghi đè cấu hình bản đồ mặc định của Frappe:
-        *   Tăng độ zoom mặc định ban đầu lên `18` (thay vì `13`) để bản đồ tự động bắt vị trí gần hơn.
-        *   Thiết lập `maxZoom: 23` và `maxNativeZoom: 19` cho tất cả tile layers (OSM, Satellite, Terrain, Labels) giúp phóng to sâu mà không bị trắng màn hình.
-        *   Ghi đè hàm `bind_leaflet_map` và `fit_and_recenter_map` của `ControlGeolocation` (trong Form View) để giới hạn zoom tự động khi fit bounds ở mức `18` (tránh zoom quá sát vỡ ảnh khi chỉ có 1 marker).
-        *   Ghi đè hàm `setup_map` và `render_map_data` của `MapView` (trong List Map View) để mang lại trải nghiệm tương tự trên giao diện danh sách bản đồ.
-*   **bfarm.css (`bfarm/public/css/bfarm.css`)**: Tùy biến giao diện Desk, thay đổi màu sắc Navbar, thêm hiệu ứng hover mượt mà cho các card và liên kết trong Workspace.
-*   **Bản dịch (`bfarm/translations/vi.csv`)**: Định nghĩa toàn bộ từ điển dịch thuật tiếng Việt cho các thuật ngữ nông nghiệp (ví dụ: chuyển "Crop Cycle" thành "Vụ canh tác", "Task" thành "Công việc chăm sóc"...).
+```
+BfarmMobileApp (Android/Kotlin) ──HTTPS──► BfarmWeb (Frappe Bench)
+                                              │
+                                              ├── apps/frappe/      ← Core Framework (KHÔNG ĐƯỢC SỬA)
+                                              ├── apps/erpnext/     ← Core ERP (KHÔNG ĐƯỢC SỬA)
+                                              ├── apps/agriculture/ ← App nông nghiệp (HẠN CHẾ SỬA)
+                                              └── apps/bfarm/       ← App tùy biến Bfarm (NƠI DUY NHẤT VIẾT CODE)
+```
+
+### 2.2. Cấu trúc chi tiết App `bfarm`
+
+```
+apps/bfarm/
+├── bfarm/
+│   ├── __init__.py
+│   ├── hooks.py                          ← Điểm vào: khai báo CSS/JS/hooks
+│   ├── modules.txt                       ← Danh sách module
+│   ├── setup.py                          ← Hàm after_migrate (sync workspaces)
+│   ├── public/
+│   │   ├── js/bfarm.js                   ← JavaScript tùy biến cho Desk
+│   │   └── css/bfarm.css                 ← CSS tùy biến cho Desk
+│   ├── translations/
+│   │   └── vi.csv                        ← Bản dịch tiếng Việt
+│   └── bfarm/
+│       ├── workspace/bfarm_agriculture/  ← Workspace JSON
+│       └── www/index.py                  ← Redirect trang gốc
+└── rule.md                               ← (file này)
+```
+
+### 2.3. App `agriculture` — Nghiệp vụ nông nghiệp
+
+- Cung cấp ~20 DocTypes: `Crop`, `Crop Cycle`, `Disease`, `Fertilizer`, `Weather`, `Soil Analysis`, `Water Analysis`, `Plant Analysis`...
+- Xác thực đăng nhập theo role (`on_login → validate_login_role` trong `auth.py`)
+- Tạo dữ liệu mặc định sau cài đặt (~90 tiêu chí phân tích trong `setup.py`)
+- Cấp quyền `Custom DocPerm` trên `Location` cho role Agriculture
 
 ---
 
-## 4. Quy tắc Phát triển và Tùy biến (Customization Rules)
+## 3. QUY TẮC BẮT BUỘC KHI TÙY BIẾN
 
-Để đảm bảo dự án có khả năng bảo trì, nâng cấp phiên bản Frappe/ERPNext dễ dàng và không gây xung đột hệ thống, lập trình viên **bắt buộc** tuân thủ các quy tắc sau:
+### Quy tắc 1 — KHÔNG sử dụng `frappe.ready()` cho code chạy trên Desk
 
-### Quy tắc 1: Không chỉnh sửa mã nguồn core
-*   **TUYỆT ĐỐI KHÔNG** sửa đổi trực tiếp bất kỳ tệp tin nào nằm trong thư mục `apps/frappe` hoặc `apps/erpnext`.
-*   Hạn chế sửa trực tiếp app `agriculture` vì đây là app nghiệp vụ nền. Mọi mở rộng phải được định cấu hình từ app `bfarm`.
+```javascript
+// ❌ SAI — frappe.ready() chỉ tồn tại trên Website, KHÔNG có trên Desk
+frappe.ready(function() {
+    // Code này sẽ KHÔNG BAO GIỜ chạy trên Desk
+});
 
-### Quy tắc 2: Thực hiện mọi tùy biến trong app `bfarm`
-Mọi thay đổi về hành vi, giao diện, API, logic nghiệp vụ phải được đặt trong ứng dụng tùy biến `bfarm`:
-*   *Nếu cần tùy biến CSS/JS*: Thêm code vào `bfarm.css` hoặc `bfarm.js`.
-*   *Nếu cần tùy biến Backend*:
-    *   Tạo các hàm Python whitelisted (`@frappe.whitelist()`) bên trong `apps/bfarm/bfarm` để làm custom API cho mobile.
-    *   Sử dụng cơ chế **Doc Events** hoặc **Override class** trong `hooks.py` của `bfarm` để can thiệp vào vòng đời tài liệu của ERPNext/Frappe.
-*   *Nếu cần tạo Doctype mới*: Đăng ký chúng thuộc module `Bfarm`.
+// ✅ ĐÚNG — $(document).ready() hoạt động trên cả Desk và Website
+$(document).ready(function() {
+    // Code này chạy đúng trên mọi ngữ cảnh
+});
+```
 
-### Quy tắc 3: Quy trình áp dụng thay đổi UI bắt buộc
-Mỗi khi có sự thay đổi về CSS, JS hoặc cấu hình Workspace trong app `bfarm`, lập trình viên phải chạy các lệnh sau trong thư mục Bench:
-1.  **Biên dịch lại Assets**:
-    ```bash
-    bench build --app bfarm
-    ```
-    *(Hoặc chạy `bench watch` trong suốt quá trình phát triển để tự động biên dịch)*
-2.  **Dọn dẹp Cache hệ thống**:
-    ```bash
-    bench clear-cache
-    ```
-3.  **Xóa Cache Trình duyệt**:
-    Phía client cần nhấn tổ hợp phím **`Ctrl + F5`** (Windows) hoặc **`Cmd + Shift + R`** (macOS) để cập nhật giao diện tùy biến mới nhất.
+### Quy tắc 2 — KHÔNG chỉnh sửa mã nguồn Core
 
-### Quy tắc 4: Quản lý bản dịch qua File dịch thuật
-*   Không hardcode tiếng Việt vào các tệp JS, HTML hay Python.
-*   Luôn bọc chuỗi ký tự bằng hàm dịch thuật: `__("Chuỗi tiếng Anh")` trong JS hoặc `_("Chuỗi tiếng Anh")` trong Python.
-*   Khai báo bản dịch tương ứng trong tệp dịch thuật tập trung: [vi.csv](file:///d:/Beeyond/Bfarm/BfarmWeb/frappe/beeyond/apps/bfarm/bfarm/translations/vi.csv).
+| Thư mục | Được phép sửa? | Lý do |
+|---------|---------------|-------|
+| `apps/frappe/` | ❌ TUYỆT ĐỐI KHÔNG | Core framework, sẽ mất khi cập nhật |
+| `apps/erpnext/` | ❌ TUYỆT ĐỐI KHÔNG | Core ERP, sẽ mất khi cập nhật |
+| `apps/agriculture/` | ⚠️ HẠN CHẾ | App nghiệp vụ nền, chỉ sửa khi thật cần thiết |
+| `apps/bfarm/` | ✅ NƠI DUY NHẤT | Mọi tùy biến phải nằm ở đây |
+
+### Quy tắc 3 — Cách ghi đè Class đúng chuẩn Frappe
+
+Khi ghi đè Class của Frappe (như `ControlGeolocation`, `MapView`), **bắt buộc** dùng kế thừa ES6:
+
+```javascript
+// ❌ SAI — Monkey-patching prototype trực tiếp, dễ mất method gốc
+frappe.ui.form.ControlGeolocation.prototype.bind_leaflet_map = function() { ... };
+
+// ✅ ĐÚNG — Kế thừa Class gốc, giữ nguyên mọi method không bị ghi đè
+const OriginalClass = frappe.ui.form.ControlGeolocation;
+frappe.ui.form.ControlGeolocation = class extends OriginalClass {
+    bind_leaflet_map() {
+        // Code ghi đè ở đây
+        // Có thể gọi super.bind_leaflet_map() nếu cần logic gốc
+    }
+    // Các method khác (make_map, bind_leaflet_data...) được kế thừa tự động
+};
+```
+
+### Quy tắc 4 — Quy trình bắt buộc sau mỗi lần thay đổi CSS/JS
+
+**Sau mỗi lần sửa file trong `bfarm/public/`**, phải chạy:
+
+```bash
+# Bước 1: Tạo symlink và biên dịch assets
+bench build --app bfarm
+
+# Bước 2: Xóa cache server
+bench clear-cache
+
+# Bước 3: Xóa cache trình duyệt (Ctrl+F5 hoặc Cmd+Shift+R)
+```
+
+**Nếu đang phát triển**, dùng `bench watch` để tự động build khi file thay đổi:
+```bash
+bench watch
+```
+
+> **Lưu ý quan trọng**: Nếu bỏ qua bước `bench build`, file JS/CSS sẽ **không tồn tại** 
+> tại đường dẫn `/assets/bfarm/...` → lỗi 404 → mọi tùy biến giao diện sẽ không hoạt động.
+
+### Quy tắc 5 — Cách khai báo assets trong hooks.py
+
+```python
+# ✅ Cách 1: Đường dẫn tĩnh trực tiếp (app nhỏ, không cần bundler)
+app_include_css = "/assets/bfarm/css/bfarm.css"
+app_include_js = "/assets/bfarm/js/bfarm.js"
+
+# ✅ Cách 2: Dùng Frappe bundler (app lớn, khuyến nghị cho dự án phát triển lâu dài)
+# Tạo file: bfarm/public/js/bfarm.bundle.js
+# Khai báo:
+# app_include_js = "bfarm.bundle.js"
+```
+
+### Quy tắc 6 — Quản lý bản dịch
+
+- **KHÔNG** hardcode tiếng Việt vào JS, HTML hay Python
+- Luôn bọc chuỗi bằng hàm dịch: `__("English text")` trong JS, `_("English text")` trong Python
+- Khai báo bản dịch trong file tập trung: `bfarm/translations/vi.csv`
+
+### Quy tắc 7 — Kiểm tra trước khi commit
+
+Trước khi commit code, lập trình viên phải:
+1. Kiểm tra cú pháp JS: `node -c bfarm/public/js/bfarm.js`
+2. Kiểm tra cú pháp Python: `python -m py_compile <file.py>`
+3. Chạy `bench build --app bfarm` trên server và xác nhận không có lỗi
+4. Mở trình duyệt → F12 Console → kiểm tra không có lỗi 404 hoặc TypeError liên quan đến bfarm
+
+---
+
+## 4. BẢNG TÓM TẮT LỖI & GIẢI PHÁP
+
+| # | Lỗi | Nguyên nhân | Giải pháp | File bị ảnh hưởng |
+|---|-----|-------------|-----------|-------------------|
+| 1 | Code JS custom không chạy trên Desk | Dùng `frappe.ready()` — hàm này chỉ tồn tại trên Website, không tồn tại trên Desk | Thay bằng `$(document).ready()` | `bfarm/public/js/bfarm.js` |
+| 2 | CSS/JS bị lỗi 404 | Chưa chạy `bench build` → thiếu symlink `sites/assets/bfarm` | Chạy `bench build --app bfarm` | `sites/assets/` |
+| 3 | Bundle không được đăng ký | `assets.json` không chứa entry của bfarm | Chạy `bench build --app bfarm` | `sites/assets/assets.json` |
+| 4 | Translation vẫn chạy | Translation dùng cơ chế riêng (API + CSV), không phụ thuộc assets | Không cần sửa | — |

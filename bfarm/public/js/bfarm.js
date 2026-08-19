@@ -1,4 +1,4 @@
-frappe.ready(function() {
+$(document).ready(function() {
     // Customization for Desk Navbar
     let customize_navbar = function() {
         let brand = $(".navbar-brand");
