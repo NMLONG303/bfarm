@@ -65,122 +65,126 @@ frappe.ready(function() {
 
         // Ghi đè class ControlGeolocation (Sử dụng trong form View)
         if (frappe.ui.form.ControlGeolocation && !frappe.ui.form.ControlGeolocation.prototype._bfarm_overridden) {
-            frappe.ui.form.ControlGeolocation.prototype._bfarm_overridden = true;
+            const OriginalControlGeolocation = frappe.ui.form.ControlGeolocation;
             
-            // Ghi đè hàm bind_leaflet_map để bản đồ khởi tạo với maxZoom: 23
-            frappe.ui.form.ControlGeolocation.prototype.bind_leaflet_map = function() {
-                // Khởi tạo map với maxZoom là 23
-                this.map = L.map(this.map_id, {
-                    maxZoom: 23
-                });
-                
-                this.map.setView(frappe.utils.map_defaults.center, frappe.utils.map_defaults.zoom);
-
-                this.streetLayer = L.tileLayer(
-                    frappe.utils.map_defaults.tiles.default_tile.url,
-                    frappe.utils.map_defaults.tiles.default_tile.options
-                );
-                this.satelliteLayer = L.tileLayer(
-                    frappe.utils.map_defaults.tiles.satellite_tile.url,
-                    frappe.utils.map_defaults.tiles.satellite_tile.options
-                );
-                this.labelsLayer = L.tileLayer(
-                    frappe.utils.map_defaults.tiles.labels_tail.url,
-                    frappe.utils.map_defaults.tiles.labels_tail.options
-                );
-                this.terrainLayer = L.tileLayer(
-                    frappe.utils.map_defaults.tiles.terrain_lines_tail.url,
-                    frappe.utils.map_defaults.tiles.terrain_lines_tail.options
-                );
-
-                this.streetLayer.addTo(this.map);
-
-                this.editableLayers = new L.FeatureGroup();
-                console.log("[Bfarm Geolocation Override] Leaflet map initialized with maxZoom: 23, maxNativeZoom: 19");
-            };
-
-            // Ghi đè hàm fit_and_recenter_map để khống chế zoom tự động tối đa ở mức 18 khi fitBounds
-            frappe.ui.form.ControlGeolocation.prototype.fit_and_recenter_map = function() {
-                try {
-                    this.map.invalidateSize();
-                    this.map.fitBounds(this.editableLayers.getBounds(), {
-                        padding: [50, 50],
-                        maxZoom: 18 // Tránh tự động zoom quá sâu (như 23) làm vỡ/mất ảnh khi có 1 marker
+            frappe.ui.form.ControlGeolocation = class ControlGeolocation extends OriginalControlGeolocation {
+                bind_leaflet_map() {
+                    // Khởi tạo map với maxZoom là 23
+                    this.map = L.map(this.map_id, {
+                        maxZoom: 23
                     });
-                } catch (err) {
-                    // bỏ qua lỗi
+                    
+                    this.map.setView(frappe.utils.map_defaults.center, frappe.utils.map_defaults.zoom);
+
+                    this.streetLayer = L.tileLayer(
+                        frappe.utils.map_defaults.tiles.default_tile.url,
+                        frappe.utils.map_defaults.tiles.default_tile.options
+                    );
+                    this.satelliteLayer = L.tileLayer(
+                        frappe.utils.map_defaults.tiles.satellite_tile.url,
+                        frappe.utils.map_defaults.tiles.satellite_tile.options
+                    );
+                    this.labelsLayer = L.tileLayer(
+                        frappe.utils.map_defaults.tiles.labels_tail.url,
+                        frappe.utils.map_defaults.tiles.labels_tail.options
+                    );
+                    this.terrainLayer = L.tileLayer(
+                        frappe.utils.map_defaults.tiles.terrain_lines_tail.url,
+                        frappe.utils.map_defaults.tiles.terrain_lines_tail.options
+                    );
+
+                    this.streetLayer.addTo(this.map);
+
+                    this.editableLayers = new L.FeatureGroup();
+                    console.log("[Bfarm Geolocation Override] Leaflet map initialized with maxZoom: 23, maxNativeZoom: 19 (via Class Inheritance)");
+                }
+
+                fit_and_recenter_map() {
+                    try {
+                        this.map.invalidateSize();
+                        this.map.fitBounds(this.editableLayers.getBounds(), {
+                            padding: [50, 50],
+                            maxZoom: 18 // Tránh tự động zoom quá sâu (như 23) làm vỡ/mất ảnh khi có 1 marker
+                        });
+                    } catch (err) {
+                        // bỏ qua lỗi
+                    }
                 }
             };
-            console.log("[Bfarm Geolocation Override] ControlGeolocation methods overridden.");
+            
+            frappe.ui.form.ControlGeolocation.prototype._bfarm_overridden = true;
+            console.log("[Bfarm Geolocation Override] ControlGeolocation inherited and overridden.");
         }
 
         // Ghi đè class MapView (Sử dụng trong danh sách List Map View)
         if (frappe.views.MapView && !frappe.views.MapView.prototype._bfarm_overridden) {
+            const OriginalMapView = frappe.views.MapView;
+
+            frappe.views.MapView = class MapView extends OriginalMapView {
+                setup_map() {
+                    this.map_id = frappe.dom.get_unique_id();
+                    this.$result.html(`<div id="${this.map_id}" class="map-view-container"></div>`);
+
+                    L.Icon.Default.imagePath = frappe.utils.map_defaults.image_path;
+                    this.map = L.map(this.map_id, {
+                        maxZoom: 23
+                    }).setView(
+                        frappe.utils.map_defaults.center,
+                        frappe.utils.map_defaults.zoom
+                    );
+
+                    this.streetLayer = L.tileLayer(
+                        frappe.utils.map_defaults.tiles.default_tile.url,
+                        frappe.utils.map_defaults.tiles.default_tile.options
+                    );
+                    this.satelliteLayer = L.tileLayer(
+                        frappe.utils.map_defaults.tiles.satellite_tile.url,
+                        frappe.utils.map_defaults.tiles.satellite_tile.options
+                    );
+                    this.labelsLayer = L.tileLayer(
+                        frappe.utils.map_defaults.tiles.labels_tail.url,
+                        frappe.utils.map_defaults.tiles.labels_tail.options
+                    );
+                    this.terrainLayer = L.tileLayer(
+                        frappe.utils.map_defaults.tiles.terrain_lines_tail.url,
+                        frappe.utils.map_defaults.tiles.terrain_lines_tail.options
+                    );
+
+                    this.streetLayer.addTo(this.map);
+
+                    this.bind_leaflet_layers_control();
+                    this.bind_leaflet_locate_control();
+                    L.control.scale().addTo(this.map);
+                    if (!this.bound_event_listeners) {
+                        this.bind_leaflet_event_listeners();
+                    }
+                    console.log("[Bfarm MapView Override] MapView setup with maxZoom: 23 (via Class Inheritance)");
+                }
+
+                render_map_data(features) {
+                    if (this.markerLayer) {
+                        this.map.removeLayer(this.markerLayer);
+                    }
+
+                    if (features && features.length) {
+                        this.markerLayer = L.featureGroup();
+
+                        features.forEach((feature) => {
+                            const marker = L.geoJSON(feature).bindPopup(this.get_popup_content(feature));
+                            this.markerLayer.addLayer(marker);
+                        });
+
+                        this.markerLayer.addTo(this.map);
+
+                        this.map.fitBounds(this.markerLayer.getBounds(), {
+                            maxZoom: 18 // Tránh tự động zoom quá sâu làm vỡ/mất ảnh
+                        });
+                    }
+                }
+            };
+
             frappe.views.MapView.prototype._bfarm_overridden = true;
-
-            // Ghi đè hàm setup_map để bản đồ khởi tạo với maxZoom: 23
-            frappe.views.MapView.prototype.setup_map = function() {
-                this.map_id = frappe.dom.get_unique_id();
-                this.$result.html(`<div id="${this.map_id}" class="map-view-container"></div>`);
-
-                L.Icon.Default.imagePath = frappe.utils.map_defaults.image_path;
-                this.map = L.map(this.map_id, {
-                    maxZoom: 23
-                }).setView(
-                    frappe.utils.map_defaults.center,
-                    frappe.utils.map_defaults.zoom
-                );
-
-                this.streetLayer = L.tileLayer(
-                    frappe.utils.map_defaults.tiles.default_tile.url,
-                    frappe.utils.map_defaults.tiles.default_tile.options
-                );
-                this.satelliteLayer = L.tileLayer(
-                    frappe.utils.map_defaults.tiles.satellite_tile.url,
-                    frappe.utils.map_defaults.tiles.satellite_tile.options
-                );
-                this.labelsLayer = L.tileLayer(
-                    frappe.utils.map_defaults.tiles.labels_tail.url,
-                    frappe.utils.map_defaults.tiles.labels_tail.options
-                );
-                this.terrainLayer = L.tileLayer(
-                    frappe.utils.map_defaults.tiles.terrain_lines_tail.url,
-                    frappe.utils.map_defaults.tiles.terrain_lines_tail.options
-                );
-
-                this.streetLayer.addTo(this.map);
-
-                this.bind_leaflet_layers_control();
-                this.bind_leaflet_locate_control();
-                L.control.scale().addTo(this.map);
-                if (!this.bound_event_listeners) {
-                    this.bind_leaflet_event_listeners();
-                }
-                console.log("[Bfarm MapView Override] MapView setup with maxZoom: 23");
-            };
-
-            // Ghi đè hàm render_map_data để khống chế zoom tự động tối đa ở mức 18 khi fitBounds
-            frappe.views.MapView.prototype.render_map_data = function(features) {
-                if (this.markerLayer) {
-                    this.map.removeLayer(this.markerLayer);
-                }
-
-                if (features && features.length) {
-                    this.markerLayer = L.featureGroup();
-
-                    features.forEach((feature) => {
-                        const marker = L.geoJSON(feature).bindPopup(this.get_popup_content(feature));
-                        this.markerLayer.addLayer(marker);
-                    });
-
-                    this.markerLayer.addTo(this.map);
-
-                    this.map.fitBounds(this.markerLayer.getBounds(), {
-                        maxZoom: 18 // Tránh tự động zoom quá sâu làm vỡ/mất ảnh
-                    });
-                }
-            };
-            console.log("[Bfarm Geolocation Override] MapView methods overridden.");
+            console.log("[Bfarm Geolocation Override] MapView inherited and overridden.");
         }
     };
 
