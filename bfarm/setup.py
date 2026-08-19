@@ -19,29 +19,7 @@ def sync_workspaces():
 				frappe.get_doc(card_data).insert(ignore_permissions=True)
 				frappe.db.commit()
 
-		# Ghi đè trực tiếp logo.png lên các tệp logo gốc của ERPNext và Frappe
-		try:
-			import shutil
-			src_logo = frappe.get_app_path("bfarm", "assets", "logo.png")
-			if os.path.exists(src_logo):
-				erpnext_img_dir = frappe.get_app_path("erpnext", "public", "images")
-				if os.path.exists(erpnext_img_dir):
-					shutil.copyfile(src_logo, os.path.join(erpnext_img_dir, "erpnext-logo.png"))
-					shutil.copyfile(src_logo, os.path.join(erpnext_img_dir, "erpnext-logo-blue.png"))
-					shutil.copyfile(src_logo, os.path.join(erpnext_img_dir, "erpnext-logo.svg"))
-				frappe_img_dir = frappe.get_app_path("frappe", "public", "images")
-				if os.path.exists(frappe_img_dir):
-					shutil.copyfile(src_logo, os.path.join(frappe_img_dir, "frappe-framework-logo.svg"))
-					shutil.copyfile(src_logo, os.path.join(frappe_img_dir, "frappe-framework-logo.png"))
-					shutil.copyfile(src_logo, os.path.join(frappe_img_dir, "frappe-logo.png"))
-			
-			# Ghi đè trực tiếp template login.html tiếng Việt
-			src_login = frappe.get_app_path("bfarm", "www", "login.html")
-			dest_login = frappe.get_app_path("frappe", "www", "login.html")
-			if os.path.exists(src_login) and os.path.exists(os.path.dirname(dest_login)):
-				shutil.copyfile(src_login, dest_login)
-		except Exception:
-			pass
+
 
 		# Đổi thương hiệu ứng dụng hệ thống sang Bfarm và dùng logo mới
 		try:

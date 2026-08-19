@@ -66,10 +66,9 @@ img[src*="erpnext-logo"], img[src*="frappe-framework-logo"], .workspace-dock-log
     border-radius: 4px;
 }
 
-/* Custom Login Page Styling - Màu Xanh Biển (Ocean Blue) phù hợp với Logo Bfarm */
+/* Custom Login Page Styling - Trả về màu nền mặc định gốc của hệ thống */
 .for-login, .for-email-login, .for-signup, .for-forgot, .for-login-with-email-link {
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%) !important;
-    min-height: 100vh;
+    /* Trả về màu nền mặc định của Frappe Framework */
 }
 
 .login-content.page-card {
