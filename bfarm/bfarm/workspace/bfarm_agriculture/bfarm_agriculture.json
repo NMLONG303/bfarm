@@ -1,6 +1,25 @@
 {
- "charts": [],
- "content": "[{\"type\": \"header\", \"data\": {\"text\": \"Danh mục & Nghiệp vụ Nông nghiệp\", \"level\": 4, \"col\": 12}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Cây trồng & Đất đai\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Phân tích nông nghiệp\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Bệnh hại & Phân bón\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Mua bán & Kho bãi\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Tài chính & Chi phí\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Nhân sự & Công việc\", \"col\": 4}}]",
+ "charts": [
+  {
+   "chart_name": "Completed Projects",
+   "label": "Completed Projects"
+  }
+ ],
+ "number_cards": [
+  {
+   "label": "Open Projects",
+   "number_card_name": "Open Projects"
+  },
+  {
+   "label": "Non Completed Tasks",
+   "number_card_name": "Non Completed Tasks"
+  },
+  {
+   "label": "Working Hours",
+   "number_card_name": "Timesheet Working Hours"
+  }
+ ],
+ "content": "[{\"id\": \"spacer_proj\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"chart_proj\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Completed Projects\", \"col\": 12}}, {\"id\": \"nc_open_proj\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Open Projects\", \"col\": 4}}, {\"id\": \"nc_tasks\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Non Completed Tasks\", \"col\": 4}}, {\"id\": \"nc_hours\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Timesheet Working Hours\", \"col\": 4}}, {\"type\": \"header\", \"data\": {\"text\": \"Danh mục & Nghiệp vụ Nông nghiệp\", \"level\": 4, \"col\": 12}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Cây trồng & Đất đai\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Phân tích nông nghiệp\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Bệnh hại & Phân bón\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Mua bán & Kho bãi\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Tài chính & Chi phí\", \"col\": 4}}, {\"type\": \"card\", \"data\": {\"card_name\": \"Nhân sự & Công việc\", \"col\": 4}}]",
  "creation": "2026-08-18 10:00:00.000000",
  "docstatus": 0,
  "doctype": "Workspace",

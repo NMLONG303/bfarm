@@ -29,6 +29,12 @@ def sync_workspaces():
 			doc = frappe.get_doc("Workspace", name)
 			# Cập nhật nội dung JSON
 			doc.content = data.get("content")
+			doc.charts = []
+			for chart in data.get("charts", []):
+				doc.append("charts", chart)
+			doc.number_cards = []
+			for card in data.get("number_cards", []):
+				doc.append("number_cards", card)
 			doc.links = []
 			for link in data.get("links", []):
 				doc.append("links", link)
