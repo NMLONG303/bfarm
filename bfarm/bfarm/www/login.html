@@ -80,6 +80,15 @@
 <script>
 (function() {
     function translateLogin() {
+        // Ngừng scanner vĩnh viễn ngay khi form login không còn trên DOM
+        // (sau đăng nhập thành công body bị thay bằng splash_screen) -> tiết kiệm CPU, tránh jank trên trình duyệt yếu
+        if (!document.querySelector(".login-content")) {
+            if (window.__bfarm_login_timer) {
+                clearInterval(window.__bfarm_login_timer);
+                window.__bfarm_login_timer = null;
+            }
+            return;
+        }
         var map = {
             "Sign In": "Đăng nhập",
             "Welcome! Please sign in to continue.": "Chào mừng bạn! Vui lòng đăng nhập để tiếp tục.",
@@ -110,7 +119,7 @@
         localStorage.removeItem("frappe_last_route");
     } catch(e) {}
     document.addEventListener('DOMContentLoaded', translateLogin);
-    setInterval(translateLogin, 200);
+    window.__bfarm_login_timer = setInterval(translateLogin, 200);
 })();
 </script>
 {% endblock %}

@@ -63,6 +63,12 @@ role_home_page = {
 # Session Boot Hook
 boot_session = "bfarm.bfarm.boot.boot_session"
 
+# Authentication - chạy SAU khi xác thực, TRƯỚC khi set_user_info
+# => đặt flags.home_page tuyệt đối để post-login redirect ổn định + giảm lag (xem bfarm/auth.py)
+on_login = [
+	"bfarm.bfarm.auth.on_login"
+]
+
 # Installation
 # ------------
 after_migrate = "bfarm.bfarm.setup.sync_workspaces"

@@ -212,6 +212,25 @@ Cơ chế BẮT BUỘC (đã xác minh 2026-08-19) — làm theo đúng thứ t�
 4. **Đừng cố dùng `extend_bootinfo`**: hook chạy ở `frappe/sessions.py` dòng 169 TRƯỚC khi `bootinfo["apps_data"]` được tạo (dòng 176-180) nên luôn `False`; kể cả khi ghi được, client cũng không đọc `apps_data.default_path`. Đã xóa.
 5. Sau khi deploy change: chạy `bench migrate` (để `sync_workspaces` ép lại restrict_to_domain) + `bench clear-cache` (xóa cache `home_page:{user}` nếu từng cache `"desk"`).
 
+### Quy tắc 9 — Luồng Login & "Lag / không vào được ở một số trình duyệt" (đã xác minh 2026-08-19)
+
+Chuỗi xử lý khi submit form login:
+1. `login.js::bind_events` → POST `/api/method/login`.
+2. Server `frappe/auth.py::LoginManager.login` → `frappe.clear_cache(user=usr)` (xóa cache user, buộc rebuild boot) → `authenticate` → `post_login`.
+3. `post_login`: `run_trigger("on_login")` (frappe `_get_unseen_notes` + agriculture `validate_login_role` + bfarm `bfarm.bfarm.auth.on_login`) → `make_session` (ghi tabSessions) → `setup_boot_cache` → `set_user_info` → **`get_home_page()`** → ghi `frappe.local.response["home_page"]`.
+4. `login.js` handler 200 (dòng 325): `window.location.href = sanitise_redirect(get_url_arg("redirect-to")) || data.home_page;` rồi full-page load `/desk/bfarm-agriculture`, desk GET rebuild boot (đây là "lag" chính: ~1-6s với site 4 app khi cache lạnh).
+
+**Các lỗi thực tế đã sửa (chỉ trong app bfarm):**
+- **Redirect sau login bằng URL tương đối**: `get_home_page()` `.strip("/")` trả `"desk/bfarm-agriculture"` (thiếu `/` đầu) → phụ thuộc resolution theo URL hiện tại, dễ vỡ/mo hồ. Fix: hook `on_login` trong `bfarm/bfarm/auth.py` set `frappe.local.flags.home_page = "/desk/bfarm-agriculture"` (URL TỤYỆT ĐỐI). `get_home_page()` (utils.py:99-100) trả ngay flag này → navigation ổn định mọi trình duyệt, ĐỒNG THỜI bỏ qua toàn bộ truy vấn DB của `_get_home_page()` (role/portal/hooks/load_user) trong chính request login → giảm lag.
+- **Workspace trống sau login**: `restrict_to_domain` của workspace phải `""` (đã fix ở quy tắc 8) — nếu không `frappe/desk/desktop.py::get_workspaces` lọc nó khỏi boot với user thường.
+- **Assets 404**: chưa chạy `bench build --app bfarm` → `/assets/bfarm/js/bfarm.js` 404 → các override điều hướng client-side (xóa `session_last_route`, chặn desktop icons) không chạy.
+
+**Lưu ý KHÔNG được làm:**
+- KHÔNG dùng `boot_session`/`extend_bootinfo` để ghi `default_route`/`default_path` — frontend không đọc (đã xóa).
+- KHÔNG chỉnh core `frappe/auth.py`, `sessions.py`, `login.js` — thay đổi route chỉ qua `bfarm/bfarm/auth.py::on_login` + `role_home_page`.
+- KHÔNG xóa logic clear `session_last_route`/`frappe_last_route` trong `login.html` head — nó chống việc Desk restore về màn desktop-icons cũ (đặc biệt khi bfarm.js chưa build).
+- KHÔNG bật lại `setInterval` vô hạn trong login.html — interval phải tự dừng khi form login biến mất.
+
 ---
 
 ## 4. BẢNG TÓM TẮT LỖI & GIẢI PHÁP
