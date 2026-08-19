@@ -12,17 +12,6 @@ app_logo_url = "/assets/bfarm/images/logo.png"
 favicon = "/assets/bfarm/images/logo.png"
 app_home = "/desk/bfarm-agriculture"
 
-# Đăng ký Bfarm trên Apps Screen - route trỏ thẳng vào workspace bfarm-agriculture
-add_to_apps_screen = [
-	{
-		"name": "bfarm",
-		"logo": "/assets/bfarm/images/logo.png",
-		"title": "Bfarm",
-		"route": "/desk/bfarm-agriculture",
-		"sequence_id": 0,
-	}
-]
-
 website_context = {
 	"favicon": "/assets/bfarm/images/logo.png",
 	"splash_image": "/assets/bfarm/images/logo.png",

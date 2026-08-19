@@ -38,9 +38,10 @@ def update_website_context(context):
 def extend_bootinfo(bootinfo, **kwargs):
 	"""
 	Hook extend_bootinfo chạy SAU khi Frappe tính xong apps_data (sessions.py dòng 176-180).
-	Ghi đè apps_data.default_path để Frappe client-side đi thẳng vào bfarm-agriculture
-	mà KHÔNG hiện màn hình chọn ứng dụng (Apps Screen / Desktop).
+	Ghi đè apps_data.default_path và default_route để Frappe client-side đi thẳng vào bfarm-agriculture.
 	"""
 	if frappe.session.user and frappe.session.user != "Guest":
 		if "apps_data" in bootinfo:
 			bootinfo["apps_data"]["default_path"] = "/desk/bfarm-agriculture"
+		bootinfo["default_route"] = "bfarm-agriculture"
+		bootinfo["home_page"] = "desk/bfarm-agriculture"
