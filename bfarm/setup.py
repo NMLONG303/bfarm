@@ -40,10 +40,14 @@ def sync_workspaces():
 		# Đổi thương hiệu ứng dụng hệ thống sang Bfarm và dùng logo mới
 		try:
 			frappe.db.set_single_value("Website Settings", "app_name", "Bfarm")
+			frappe.db.set_single_value("Website Settings", "app_logo", "/assets/bfarm/images/logo.png")
 			frappe.db.set_single_value("Website Settings", "favicon", "/assets/bfarm/images/logo.png")
 			frappe.db.set_single_value("Website Settings", "splash_image", "/assets/bfarm/images/logo.png")
 			frappe.db.set_single_value("Website Settings", "banner_html", '<img src="/assets/bfarm/images/logo.png" style="height: 28px;"> Bfarm')
+			frappe.db.set_single_value("Website Settings", "language", "vi")
 			frappe.db.set_single_value("System Settings", "app_name", "Bfarm")
+			frappe.db.set_single_value("System Settings", "language", "vi")
+			frappe.db.set_single_value("Navbar Settings", "app_logo", "/assets/bfarm/images/logo.png")
 			frappe.db.commit()
 		except Exception:
 			pass

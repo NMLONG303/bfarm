@@ -26,6 +26,10 @@ required_apps = ["erpnext", "agriculture"]
 app_include_css = "/assets/bfarm/css/bfarm.css"
 app_include_js = "/assets/bfarm/js/bfarm.js"
 
+# include js, css files in website & login page
+web_include_css = "/assets/bfarm/css/bfarm.css"
+update_website_context = "bfarm.bfarm.boot.update_website_context"
+
 # Home Pages
 # ----------
 

@@ -1,4 +1,30 @@
 $(document).ready(function() {
+    // Ghi đè phương thức get_display_title của SidebarHeader để đổi chữ ERPNext thành Bfarm
+    let override_sidebar_header = function() {
+        if (frappe.ui && frappe.ui.SidebarHeader && !frappe.ui.SidebarHeader.prototype._bfarm_title_overridden) {
+            const OriginalSidebarHeader = frappe.ui.SidebarHeader;
+            frappe.ui.SidebarHeader = class SidebarHeader extends OriginalSidebarHeader {
+                get_display_title() {
+                    let title = super.get_display_title();
+                    if (title === "ERPNext" || title === "Frappe" || !title) {
+                        return "Bfarm";
+                    }
+                    return title;
+                }
+            };
+            frappe.ui.SidebarHeader.prototype._bfarm_title_overridden = true;
+            console.log("[Bfarm Sidebar Override] SidebarHeader get_display_title successfully overridden.");
+        }
+
+        // DOM helper cập nhật trực tiếp tiêu đề sidebar header
+        $(".sidebar-header .header-title, .body-sidebar .header-title, #sidebar_tab .header-title").each(function() {
+            let txt = $(this).text().trim();
+            if (txt === "ERPNext" || txt === "Frappe") {
+                $(this).text("Bfarm");
+            }
+        });
+    };
+
     // Ghi đè phương thức render_logo của WorkspaceDock để hiển thị logo.png thay thế cho logo ERPNext ở góc trên bên trái thanh Dock Rail
     let override_workspace_dock_logo = function() {
         if (frappe.ui && frappe.ui.WorkspaceDock && !frappe.ui.WorkspaceDock.prototype._bfarm_logo_overridden) {
@@ -37,12 +63,50 @@ $(document).ready(function() {
         $(".app-logo").attr("src", "/assets/bfarm/images/logo.png");
     };
 
+    // Tự động thay đổi logo và ép bản dịch tiếng Việt trực tiếp cho trang Đăng nhập (/login)
+    let override_login_page = function() {
+        if ($(".login-content").length || window.location.pathname.indexOf("login") !== -1) {
+            $(".login-content .app-logo, img.app-logo").attr("src", "/assets/bfarm/images/logo.png");
+
+            let tr = {
+                "Sign In": "Đăng nhập",
+                "Welcome! Please sign in to continue.": "Chào mừng bạn! Vui lòng đăng nhập để tiếp tục.",
+                "Email": "Email",
+                "Password": "Mật khẩu",
+                "Forgot password?": "Quên mật khẩu?",
+                "Continue": "Đăng nhập",
+                "Login with Email Link": "Đăng nhập bằng liên kết Email",
+                "Don't have an account?": "Chưa có tài khoản?",
+                "Sign up": "Đăng ký",
+                "Back to sign in": "Quay lại đăng nhập",
+                "Send Link": "Gửi liên kết",
+                "Sign Up": "Đăng ký tài khoản",
+                "Forgot Password?": "Quên mật khẩu?"
+            };
+
+            $(".login-content h4, .login-content p, .login-content label, .login-content button, .login-content a").each(function() {
+                let $el = $(this);
+                let txt = $el.text().trim();
+                if (tr[txt]) {
+                    $el.text(tr[txt]);
+                }
+            });
+        }
+    };
+
     $(document).on("toolbar_setup page-change", function() {
         clean_header_navbar();
         override_workspace_dock_logo();
+        override_sidebar_header();
+        override_login_page();
     });
     setTimeout(clean_header_navbar, 300);
     setTimeout(override_workspace_dock_logo, 300);
+    setTimeout(override_sidebar_header, 300);
+    setTimeout(override_sidebar_header, 1000);
+    setTimeout(override_login_page, 300);
+    override_sidebar_header();
+    override_login_page();
 
     // Hàm kiểm tra và thực hiện chuyển hướng về bfarm-agriculture
     let check_and_redirect_home = function() {
