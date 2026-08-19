@@ -7,18 +7,20 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.02) !important;
 }
 
-.bfarm-logo-text {
-    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+.bfarm-brand-container img {
+    height: 28px;
+    width: auto;
+    object-fit: contain;
     transition: transform 0.2s ease;
 }
 
-.bfarm-logo-text:hover {
-    transform: scale(1.03);
+.bfarm-brand-container:hover img {
+    transform: scale(1.05);
 }
 
-.bfarm-logo-text svg {
-    color: #4caf50;
-    animation: leafPulse 3s infinite ease-in-out;
+.app-logo {
+    height: 28px !important;
+    width: auto !important;
 }
 
 @keyframes leafPulse {

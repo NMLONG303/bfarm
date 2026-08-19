@@ -10,15 +10,23 @@ def sync_workspaces():
 		
 		name = data.get("name") or "Bfarm Agriculture"
 		
-		# Kiểm tra và tạo Module Def nếu chưa tồn tại
-		if not frappe.db.exists("Module Def", "Bfarm"):
-			frappe.get_doc({
-				"doctype": "Module Def",
-				"module_name": "Bfarm",
-				"app_name": "bfarm",
-				"package": "Bfarm"
-			}).insert(ignore_permissions=True)
+		# Tạo Number Card "Completed Tasks" nếu chưa có
+		if not frappe.db.exists("Number Card", "Completed Tasks"):
+			card_path = frappe.get_app_path("bfarm", "number_card", "completed_tasks", "completed_tasks.json")
+			if os.path.exists(card_path):
+				with open(card_path, "r", encoding="utf-8") as f:
+					card_data = json.load(f)
+				frappe.get_doc(card_data).insert(ignore_permissions=True)
+				frappe.db.commit()
+
+		# Đổi thương hiệu ứng dụng hệ thống sang Bfarm và dùng logo mới
+		try:
+			frappe.db.set_single_value("Website Settings", "app_name", "Bfarm")
+			frappe.db.set_single_value("Website Settings", "favicon", "/assets/bfarm/images/logo.png")
+			frappe.db.set_single_value("System Settings", "app_name", "Bfarm")
 			frappe.db.commit()
+		except Exception:
+			pass
 
 		# Kiểm tra xem Workspace đã tồn tại chưa
 		if not frappe.db.exists("Workspace", name):

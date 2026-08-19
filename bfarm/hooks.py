@@ -8,6 +8,8 @@ app_icon = "octicon octicon-file-directory"
 app_color = "green"
 app_email = "contact@beeyond.com"
 app_license = "MIT"
+app_logo_url = "/assets/bfarm/images/logo.png"
+favicon = "/assets/bfarm/images/logo.png"
 
 required_apps = ["erpnext", "agriculture"]
 
