@@ -10,6 +10,18 @@ app_email = "contact@beeyond.com"
 app_license = "MIT"
 app_logo_url = "/assets/bfarm/images/logo.png"
 favicon = "/assets/bfarm/images/logo.png"
+app_home = "/desk/bfarm-agriculture"
+
+# Đăng ký Bfarm trên Apps Screen - route trỏ thẳng vào workspace bfarm-agriculture
+add_to_apps_screen = [
+	{
+		"name": "bfarm",
+		"logo": "/assets/bfarm/images/logo.png",
+		"title": "Bfarm",
+		"route": "/desk/bfarm-agriculture",
+		"sequence_id": 0,
+	}
+]
 
 website_context = {
 	"favicon": "/assets/bfarm/images/logo.png",
@@ -47,6 +59,11 @@ role_home_page = {
 
 # Session Boot Hook
 boot_session = "bfarm.bfarm.boot.boot_session"
+
+# Extend Bootinfo - chạy SAU khi Frappe tính xong apps_data để ghi đè default_path
+extend_bootinfo = [
+	"bfarm.bfarm.boot.extend_bootinfo"
+]
 
 # Installation
 # ------------

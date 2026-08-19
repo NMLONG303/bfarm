@@ -9,6 +9,8 @@ def boot_session(bootinfo):
 		if hasattr(bootinfo, "user") and bootinfo.user:
 			bootinfo.user.default_route = "bfarm-agriculture"
 		bootinfo.default_route = "bfarm-agriculture"
+		# Ép default_path để Frappe client biết phải đi thẳng vào bfarm, không hiện Apps Screen
+		bootinfo.default_path = "/desk/bfarm-agriculture"
 		
 		# Ghi đè logo và tên ứng dụng hệ thống sang Bfarm
 		bootinfo.app_logo_url = "/assets/bfarm/images/logo.png"
@@ -33,3 +35,12 @@ def update_website_context(context):
 	context["app_name"] = "Bfarm"
 
 
+def extend_bootinfo(bootinfo, **kwargs):
+	"""
+	Hook extend_bootinfo chạy SAU khi Frappe tính xong apps_data (sessions.py dòng 176-180).
+	Ghi đè apps_data.default_path để Frappe client-side đi thẳng vào bfarm-agriculture
+	mà KHÔNG hiện màn hình chọn ứng dụng (Apps Screen / Desktop).
+	"""
+	if frappe.session.user and frappe.session.user != "Guest":
+		if "apps_data" in bootinfo:
+			bootinfo["apps_data"]["default_path"] = "/desk/bfarm-agriculture"
