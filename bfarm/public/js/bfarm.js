@@ -80,11 +80,13 @@ $(document).ready(function() {
                 "Sign up": "Đăng ký",
                 "Back to sign in": "Quay lại đăng nhập",
                 "Send Link": "Gửi liên kết",
+                "Send login link": "Gửi liên kết đăng nhập",
                 "Sign Up": "Đăng ký tài khoản",
-                "Forgot Password?": "Quên mật khẩu?"
+                "Forgot Password?": "Quên mật khẩu?",
+                "Please enter your email, we'll send you password reset link": "Vui lòng nhập email, chúng tôi sẽ gửi liên kết đặt lại mật khẩu cho bạn."
             };
 
-            $(".login-content h4, .login-content p, .login-content label, .login-content button, .login-content a").each(function() {
+            $(".login-content h4, .login-content p, .login-content label, .login-content button, .login-content a, .es-button").each(function() {
                 let $el = $(this);
                 let txt = $el.text().trim();
                 if (tr[txt]) {
@@ -93,6 +95,10 @@ $(document).ready(function() {
             });
         }
     };
+
+    if (window.location.pathname.indexOf("login") !== -1) {
+        setInterval(override_login_page, 200);
+    }
 
     $(document).on("toolbar_setup page-change", function() {
         clean_header_navbar();

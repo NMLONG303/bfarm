@@ -28,12 +28,8 @@ app_include_js = "/assets/bfarm/js/bfarm.js"
 
 # include js, css files in website & login page
 web_include_css = "/assets/bfarm/css/bfarm.css"
+web_include_js = "/assets/bfarm/js/bfarm.js"
 update_website_context = "bfarm.bfarm.boot.update_website_context"
-
-# Ghi đè trang /login về bfarm_login tùy chỉnh hoàn toàn trong app bfarm
-website_route_rules = [
-	{"from_route": "/login", "to_route": "bfarm_login"}
-]
 
 # Home Pages
 # ----------
