@@ -23,6 +23,14 @@
     width: auto !important;
 }
 
+/* Ghi đè tuyệt đối logo ERPNext / Frappe trên toàn bộ giao diện Desk */
+img[src*="erpnext-logo"], img[src*="frappe-framework-logo"] {
+    content: url("/assets/bfarm/images/logo.png") !important;
+    max-height: 28px !important;
+    width: auto !important;
+    object-fit: contain !important;
+}
+
 @keyframes leafPulse {
     0% { transform: scale(1); }
     50% { transform: scale(1.1); color: #2e7d32; }
