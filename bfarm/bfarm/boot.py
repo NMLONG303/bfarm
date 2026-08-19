@@ -17,7 +17,7 @@ def boot_session(bootinfo):
 		if hasattr(bootinfo, "app_data") and bootinfo.app_data:
 			for app in bootinfo.app_data:
 				app["app_logo_url"] = "/assets/bfarm/images/logo.png"
-				if app.get("app_name") in ["erpnext", "frappe", "bfarm"]:
+				if app.get("app_name") == "bfarm":
 					app["app_title"] = "Bfarm"
 				if "logo" in app:
 					app["logo"] = "/assets/bfarm/images/logo.png"

@@ -143,41 +143,23 @@ $(document).ready(function() {
         let current_route = frappe.get_route_str ? frappe.get_route_str().toLowerCase() : "";
         let route_arr = frappe.get_route ? frappe.get_route() : [];
         let first_route = route_arr.length ? String(route_arr[0]).toLowerCase() : "";
-        let path_name = window.location.pathname.toLowerCase();
 
         let is_desktop_dom = $(".desktop-container").length > 0 || $(".icons-container").length > 0;
         let is_target_workspace = current_route.indexOf("bfarm-agriculture") !== -1 || 
             first_route === "bfarm-agriculture" || 
             (route_arr.length > 1 && String(route_arr[1]).toLowerCase() === "bfarm agriculture");
 
-        // Trường hợp 1: DOM đang hiện Desktop icons, nhưng URL đã là /desk/bfarm-agriculture
-        if (is_desktop_dom && path_name.indexOf("bfarm-agriculture") !== -1) {
-            console.log("[Bfarm Redirect] Desktop container detected on bfarm-agriculture URL -> forcing router execution");
-            if (frappe.router && typeof frappe.router.route === "function") {
-                frappe.router.route();
-            } else {
-                window.location.replace("/desk/bfarm-agriculture#Workspaces/Bfarm%20Agriculture");
+        if (is_desktop_dom || first_route === "desktop" || current_route === "desktop" || current_route === "desk" || !current_route) {
+            if (!is_target_workspace || is_desktop_dom) {
+                console.log("[Bfarm Redirect] Desktop container detected -> removing desktop DOM and switching to bfarm-agriculture workspace");
+                $(".desktop-container, .icons-container").remove();
+                $("#page-desktop").hide();
+                if (frappe.router) {
+                    frappe.router.current_route = null;
+                    frappe.route_flags.replace_route = true;
+                    frappe.set_route("Workspaces", "Bfarm Agriculture");
+                }
             }
-            return;
-        }
-
-        // Trường hợp 2: Đang ở route desktop, home, apps, hoặc route rỗng
-        let should_redirect = !current_route || 
-            current_route === "workspaces/home" || 
-            current_route === "home" || 
-            current_route === "desk" ||
-            current_route === "desktop" ||
-            current_route === "apps" ||
-            current_route === "workspaces" ||
-            first_route === "desktop" ||
-            first_route === "apps" ||
-            first_route === "desk" ||
-            first_route === "home" ||
-            is_desktop_dom;
-
-        if (should_redirect && !is_target_workspace) {
-            console.log("[Bfarm Redirect] Intercepted desktop/home route -> navigating to bfarm-agriculture");
-            frappe.set_route("bfarm-agriculture");
         }
     };
 
