@@ -11,6 +11,12 @@ app_license = "MIT"
 app_logo_url = "/assets/bfarm/images/logo.png"
 favicon = "/assets/bfarm/images/logo.png"
 
+website_context = {
+	"favicon": "/assets/bfarm/images/logo.png",
+	"splash_image": "/assets/bfarm/images/logo.png",
+	"logo": "/assets/bfarm/images/logo.png"
+}
+
 required_apps = ["erpnext", "agriculture"]
 
 # Includes in <head>

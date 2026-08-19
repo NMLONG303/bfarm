@@ -19,7 +19,7 @@ def sync_workspaces():
 				frappe.get_doc(card_data).insert(ignore_permissions=True)
 				frappe.db.commit()
 
-		# Ghi đè trực tiếp logo.png lên các tệp logo gốc của ERPNext
+		# Ghi đè trực tiếp logo.png lên các tệp logo gốc của ERPNext và Frappe
 		try:
 			import shutil
 			src_logo = frappe.get_app_path("bfarm", "assets", "logo.png")
@@ -29,6 +29,11 @@ def sync_workspaces():
 					shutil.copyfile(src_logo, os.path.join(erpnext_img_dir, "erpnext-logo.png"))
 					shutil.copyfile(src_logo, os.path.join(erpnext_img_dir, "erpnext-logo-blue.png"))
 					shutil.copyfile(src_logo, os.path.join(erpnext_img_dir, "erpnext-logo.svg"))
+				frappe_img_dir = frappe.get_app_path("frappe", "public", "images")
+				if os.path.exists(frappe_img_dir):
+					shutil.copyfile(src_logo, os.path.join(frappe_img_dir, "frappe-framework-logo.svg"))
+					shutil.copyfile(src_logo, os.path.join(frappe_img_dir, "frappe-framework-logo.png"))
+					shutil.copyfile(src_logo, os.path.join(frappe_img_dir, "frappe-logo.png"))
 		except Exception:
 			pass
 
@@ -36,6 +41,8 @@ def sync_workspaces():
 		try:
 			frappe.db.set_single_value("Website Settings", "app_name", "Bfarm")
 			frappe.db.set_single_value("Website Settings", "favicon", "/assets/bfarm/images/logo.png")
+			frappe.db.set_single_value("Website Settings", "splash_image", "/assets/bfarm/images/logo.png")
+			frappe.db.set_single_value("Website Settings", "banner_html", '<img src="/assets/bfarm/images/logo.png" style="height: 28px;"> Bfarm')
 			frappe.db.set_single_value("System Settings", "app_name", "Bfarm")
 			frappe.db.commit()
 		except Exception:
