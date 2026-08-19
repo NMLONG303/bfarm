@@ -1,27 +1,48 @@
 $(document).ready(function() {
-    // Customization for Desk Navbar
-    let customize_navbar = function() {
+    // Ghi đè phương thức render_logo của WorkspaceDock để hiển thị logo.png thay thế cho logo ERPNext ở góc trên bên trái thanh Dock Rail
+    let override_workspace_dock_logo = function() {
+        if (frappe.ui && frappe.ui.WorkspaceDock && !frappe.ui.WorkspaceDock.prototype._bfarm_logo_overridden) {
+            const OriginalWorkspaceDock = frappe.ui.WorkspaceDock;
+            frappe.ui.WorkspaceDock = class WorkspaceDock extends OriginalWorkspaceDock {
+                render_logo() {
+                    let logo_url = "/assets/bfarm/images/logo.png";
+                    let title = "Bfarm Agriculture";
+
+                    if (this.$logo) {
+                        this.$logo.empty();
+                        let $link = $(
+                            `<a href="/app/bfarm-agriculture" title="${frappe.utils.escape_html(title)}" aria-label="Bfarm" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
+                                <img src="${logo_url}" alt="Bfarm Logo" style="max-height: 28px; width: auto; object-fit: contain;" />
+                            </a>`
+                        );
+                        $link.on("click", (e) => {
+                            e.preventDefault();
+                            frappe.set_route("bfarm-agriculture");
+                        });
+                        this.$logo.append($link);
+                    }
+                }
+            };
+            frappe.ui.WorkspaceDock.prototype._bfarm_logo_overridden = true;
+            console.log("[Bfarm Dock Override] WorkspaceDock render_logo successfully overridden with Bfarm logo.");
+        }
+    };
+
+    // Xóa logo/chữ dư thừa ở header navbar để giữ header gọn gàng
+    let clean_header_navbar = function() {
         let brand = $(".navbar-brand");
         if (brand.length) {
-            // Thay logo ERPNext bằng logo.png thực tế từ bfarm và đổi tên thành Bfarm
-            brand.html('<div class="bfarm-brand-container" style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><img src="/assets/bfarm/images/logo.png" alt="Bfarm Logo" style="height: 28px; width: auto; object-fit: contain;" /><span class="bfarm-logo-text" style="font-weight: 700; color: #2e7d32; font-size: 17px; letter-spacing: 0.5px;">Bfarm</span></div>');
-            
-            // Bắt sự kiện click vào logo navbar để chuyển thẳng tới bfarm-agriculture
-            brand.off("click.bfarm").on("click.bfarm", function(e) {
-                e.preventDefault();
-                frappe.set_route("bfarm-agriculture");
-            });
+            brand.empty();
         }
-
-        // Đổi src của logo nếu có các thẻ img.app-logo khác trên Navbar
         $(".app-logo").attr("src", "/assets/bfarm/images/logo.png");
     };
 
-    $(document).on("toolbar_setup", function() {
-        customize_navbar();
+    $(document).on("toolbar_setup page-change", function() {
+        clean_header_navbar();
+        override_workspace_dock_logo();
     });
-    setTimeout(customize_navbar, 300);
-    setTimeout(customize_navbar, 1000);
+    setTimeout(clean_header_navbar, 300);
+    setTimeout(override_workspace_dock_logo, 300);
 
     // Hàm kiểm tra và thực hiện chuyển hướng về bfarm-agriculture
     let check_and_redirect_home = function() {
