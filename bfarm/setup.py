@@ -39,9 +39,17 @@ def sync_workspaces():
 			doc.links = []
 			for link in data.get("links", []):
 				doc.append("links", link)
-			doc.sequence_id = data.get("sequence_id", 0)
+			doc.sequence_id = data.get("sequence_id", -100.0)
 			doc.icon = data.get("icon", "agriculture")
 			doc.title = data.get("title")
 			doc.restrict_to_domain = data.get("restrict_to_domain")
+			doc.sidebar_items = []
+			for sb in data.get("sidebar_items", []):
+				doc.append("sidebar_items", sb)
 			doc.save(ignore_permissions=True)
+			frappe.db.commit()
+
+		# Ẩn Workspace Home mặc định của ERPNext để Bfarm Agriculture ghi đè thay thế làm Home chính
+		if frappe.db.exists("Workspace", "Home"):
+			frappe.db.set_value("Workspace", "Home", "is_hidden", 1)
 			frappe.db.commit()
