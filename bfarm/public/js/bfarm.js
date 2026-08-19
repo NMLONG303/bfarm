@@ -118,33 +118,44 @@ $(document).ready(function() {
     let check_and_redirect_home = function() {
         if (frappe.session && frappe.session.user && frappe.session.user !== "Guest") {
             let current_route = frappe.get_route_str ? frappe.get_route_str().toLowerCase() : "";
+            let route_arr = frappe.get_route ? frappe.get_route() : [];
+            let first_route = route_arr.length ? String(route_arr[0]).toLowerCase() : "";
+
             let should_redirect = !current_route || 
                 current_route === "workspaces/home" || 
                 current_route === "home" || 
                 current_route === "desk" ||
-                current_route === "workspaces";
-                
-            if (should_redirect) {
-                console.log("[Bfarm Redirect] Intercepted home route -> redirecting to bfarm-agriculture");
+                current_route === "desktop" ||
+                current_route === "apps" ||
+                current_route === "workspaces" ||
+                first_route === "desktop" ||
+                first_route === "apps" ||
+                first_route === "desk" ||
+                first_route === "home";
+
+            if (should_redirect && current_route !== "bfarm-agriculture" && first_route !== "bfarm-agriculture") {
+                console.log("[Bfarm Redirect] Intercepted home/desk route -> redirecting to bfarm-agriculture");
                 frappe.set_route("bfarm-agriculture");
             }
         }
     };
 
-    // 1. Chuyển hướng khi app sẵn sàng
-    $(document).on("app_ready", function() {
+    // 1. Chuyển hướng khi app sẵn sàng & khi trang chuyển
+    $(document).on("app_ready page-change toolbar_setup", function() {
         check_and_redirect_home();
     });
 
-    // 2. Chặn Router change khi bất kỳ nút nào (như Logo/Home) kích hoạt route "home"
+    // 2. Chặn Router change khi bất kỳ nút nào (như Logo/Home) kích hoạt route "home"/"desk"
     if (frappe.router) {
         frappe.router.on("change", function() {
             check_and_redirect_home();
         });
     }
 
-    // 3. Chạy kiểm tra ngay lúc script nạp
+    // 3. Chạy kiểm tra ngay lập tức lúc nạp
     check_and_redirect_home();
+    setTimeout(check_and_redirect_home, 300);
+    setTimeout(check_and_redirect_home, 1000);
 
     // ==========================================
     // Custom Geolocation Map Zoom (Override)

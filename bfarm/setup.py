@@ -31,7 +31,9 @@ def sync_workspaces():
 			frappe.db.set_single_value("Website Settings", "language", "vi")
 			frappe.db.set_single_value("System Settings", "app_name", "Bfarm")
 			frappe.db.set_single_value("System Settings", "language", "vi")
+			frappe.db.set_single_value("System Settings", "default_app", "erpnext")
 			frappe.db.set_single_value("Navbar Settings", "app_logo", "/assets/bfarm/images/logo.png")
+			frappe.db.sql("""UPDATE `tabUser` SET default_app = 'erpnext' WHERE user_type = 'System User'""")
 			frappe.db.commit()
 		except Exception:
 			pass
