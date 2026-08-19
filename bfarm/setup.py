@@ -34,6 +34,12 @@ def sync_workspaces():
 					shutil.copyfile(src_logo, os.path.join(frappe_img_dir, "frappe-framework-logo.svg"))
 					shutil.copyfile(src_logo, os.path.join(frappe_img_dir, "frappe-framework-logo.png"))
 					shutil.copyfile(src_logo, os.path.join(frappe_img_dir, "frappe-logo.png"))
+			
+			# Ghi đè trực tiếp template login.html tiếng Việt
+			src_login = frappe.get_app_path("bfarm", "www", "login.html")
+			dest_login = frappe.get_app_path("frappe", "www", "login.html")
+			if os.path.exists(src_login) and os.path.exists(os.path.dirname(dest_login)):
+				shutil.copyfile(src_login, dest_login)
 		except Exception:
 			pass
 
