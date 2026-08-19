@@ -44,4 +44,3 @@ def extend_bootinfo(bootinfo, **kwargs):
 		if "apps_data" in bootinfo:
 			bootinfo["apps_data"]["default_path"] = "/desk/bfarm-agriculture"
 		bootinfo["default_route"] = "bfarm-agriculture"
-		bootinfo["home_page"] = "desk/bfarm-agriculture"

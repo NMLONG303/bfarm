@@ -40,10 +40,10 @@ home_page = "desk"
 
 # website user home page (by Role)
 role_home_page = {
-	"System Manager": "desk/bfarm-agriculture",
-	"Administrator": "desk/bfarm-agriculture",
-	"Agriculture User": "desk/bfarm-agriculture",
-	"All": "desk/bfarm-agriculture"
+	"System Manager": "desk",
+	"Administrator": "desk",
+	"Agriculture User": "desk",
+	"All": "desk"
 }
 
 # Session Boot Hook

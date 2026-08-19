@@ -122,6 +122,20 @@ $(document).ready(function() {
         }
     }
 
+    // Tự động đóng popup thông báo lỗi 404 "Page desk/bfarm-agriculture not found"
+    let dismiss_not_found_popups = function() {
+        $(".msgprint-dialog, .modal-dialog").each(function() {
+            let txt = $(this).text();
+            if (txt.indexOf("desk/bfarm-agriculture not found") !== -1 || txt.indexOf("Page desk/bfarm-agriculture") !== -1) {
+                let $modal = $(this).closest(".modal");
+                $modal.modal("hide");
+                $modal.remove();
+                $(".modal-backdrop").remove();
+            }
+        });
+    };
+    setInterval(dismiss_not_found_popups, 300);
+
     // Hàm kiểm tra và thực hiện chuyển hướng về bfarm-agriculture
     let check_and_redirect_home = function() {
         if (!frappe.session || !frappe.session.user || frappe.session.user === "Guest") return;
