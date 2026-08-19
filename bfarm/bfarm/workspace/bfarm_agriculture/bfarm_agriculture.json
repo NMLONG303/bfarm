@@ -381,7 +381,7 @@
  "owner": "Administrator",
  "parent_page": "",
  "public": 1,
- "restrict_to_domain": "",
+ "restrict_to_domain": null,
  "roles": [],
  "sequence_id": -100.0,
  "shortcuts": [],

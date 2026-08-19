@@ -78,12 +78,27 @@ def sync_workspaces():
 		except Exception:
 			pass
 
+		# Ép restrict_to_domain = NULL cho MỌI bản ghi workspace liên quan (không phải "")
+		# get_workspaces (desktop.py) filter "restrict_to_domain IN [None, active_domains]"
+		# -> "" không khớp NULL => workspace không nằm trong boot => /desk/bfarm-agriculture "Page not found"
+		try:
+			frappe.db.sql(
+				"UPDATE `tabWorkspace` SET restrict_to_domain = NULL WHERE name IN %s OR title IN %s",
+				(("Bfarm Agriculture",), ("Bfarm Agriculture",)),
+			)
+			frappe.db.commit()
+		except Exception:
+			pass
+
 		# Kiểm tra xem Workspace đã tồn tại chưa
 		if not frappe.db.exists("Workspace", name):
 			doc = frappe.get_doc(data)
 			doc.app = data.get("app") or "erpnext"
 			doc.public = 1
 			doc.for_user = ""
+			# NULL để lọt filter "restrict_to_domain IN (NULL, active_domains)"
+			# trong frappe/desk/desktop.py get_workspaces (chuỗi "" KHÔNG khớp NULL -> workspace bị lọc -> route not found)
+			doc.restrict_to_domain = None
 			doc.insert(ignore_permissions=True)
 			frappe.db.commit()
 		else:
@@ -105,9 +120,9 @@ def sync_workspaces():
 			doc.sequence_id = data.get("sequence_id", -100.0)
 			doc.icon = data.get("icon", "agriculture")
 			doc.title = data.get("title")
-			# Bắt buộc bỏ restrict_to_domain domain cũ để workspace luôn nằm trong boot
-			# (get_workspaces lọc theo active domain -> "/app/bfarm-agriculture" render rỗng với user thường)
-			doc.restrict_to_domain = ""
+			# Bắt buộc NULL (không phải "") để workspace luôn lọt filter get_workspaces
+			# ("restrict_to_domain IN [None, active_domains]" — "" không khớp NULL -> bị lọc -> route not found)
+			doc.restrict_to_domain = None
 			doc.sidebar_items = []
 			for sb in data.get("sidebar_items", []):
 				doc.append("sidebar_items", sb)
