@@ -175,7 +175,7 @@ $(document).ready(function() {
         }
 
         // Ghi đè class ControlGeolocation (Sử dụng trong form View)
-        if (frappe.ui.form.ControlGeolocation && !frappe.ui.form.ControlGeolocation.prototype._bfarm_overridden) {
+        if (typeof frappe !== "undefined" && frappe.ui && frappe.ui.form && frappe.ui.form.ControlGeolocation && !frappe.ui.form.ControlGeolocation.prototype._bfarm_overridden) {
             const OriginalControlGeolocation = frappe.ui.form.ControlGeolocation;
             
             frappe.ui.form.ControlGeolocation = class ControlGeolocation extends OriginalControlGeolocation {
@@ -228,7 +228,7 @@ $(document).ready(function() {
         }
 
         // Ghi đè class MapView (Sử dụng trong danh sách List Map View)
-        if (frappe.views.MapView && !frappe.views.MapView.prototype._bfarm_overridden) {
+        if (typeof frappe !== "undefined" && frappe.views && frappe.views.MapView && !frappe.views.MapView.prototype._bfarm_overridden) {
             const OriginalMapView = frappe.views.MapView;
 
             frappe.views.MapView = class MapView extends OriginalMapView {
