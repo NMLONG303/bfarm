@@ -3,9 +3,10 @@ import frappe
 def boot_session(bootinfo):
 	"""
 	Hook chạy mỗi khi khởi tạo phiên làm việc (session boot).
-	- ERPNext giữ nguyên là ứng dụng chính cùng toàn bộ các Workspaces gốc (Kế toán, Kho, Mua/Bán, HR, Dự án, Bfarm Agriculture...).
-	- Ẩn ứng dụng bfarm phụ khỏi màn hình Desktop.
-	- Đổi tên ứng dụng ERPNext trên Desktop thành "Bfarm" và đổi biểu tượng logo thành logo Bfarm.
+	- ERPNext giữ nguyên 100% là ứng dụng chính với tất cả Workspaces gốc.
+	- Ẩn ứng dụng 'bfarm' phụ khỏi màn hình Desktop.
+	- Đổi tên ứng dụng chính ERPNext thành "Bfarm", đổi logo thành Logo Bfarm,
+	  và ghi đè app_route từ "/desk/home" thành "/desk/bfarm-agriculture" để khi nhấp icon Bfarm trên Desk sẽ nhảy thẳng vào /desk/bfarm-agriculture.
 	"""
 	if frappe.session.user and frappe.session.user != "Guest":
 		bootinfo.app_logo_url = "/assets/bfarm/images/logo.png"
@@ -16,12 +17,13 @@ def boot_session(bootinfo):
 				app for app in bootinfo.app_data if app.get("app_name") != "bfarm"
 			]
 
-			# 2. Đổi tên ứng dụng chính ERPNext thành "Bfarm" và cập nhật logo Bfarm (giữ nguyên 100% Workspaces gốc của ERPNext)
+			# 2. Đổi tên ERPNext thành "Bfarm", đổi logo Bfarm và ghi đè app_route mở trực tiếp /desk/bfarm-agriculture (thay vì /desk/home)
 			for app in bootinfo.app_data:
 				if app.get("app_name") == "erpnext":
 					app["app_title"] = "Bfarm"
 					app["app_logo_url"] = "/assets/bfarm/images/logo.png"
 					app["logo"] = "/assets/bfarm/images/logo.png"
+					app["app_route"] = "/desk/bfarm-agriculture"
 
 def update_website_context(context):
 	"""
