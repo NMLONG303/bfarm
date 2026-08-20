@@ -78,13 +78,10 @@ def sync_workspaces():
 		except Exception:
 			pass
 
-		# Ép restrict_to_domain = NULL cho MỌI bản ghi workspace liên quan (không phải "")
-		# get_workspaces (desktop.py) filter "restrict_to_domain IN [None, active_domains]"
-		# -> "" không khớp NULL => workspace không nằm trong boot => /desk/bfarm-agriculture "Page not found"
+		# Ép restrict_to_domain = NULL, is_hidden = 0, public = 1 cho MỌI bản ghi workspace liên quan
 		try:
 			frappe.db.sql(
-				"UPDATE `tabWorkspace` SET restrict_to_domain = NULL WHERE name IN %s OR title IN %s",
-				(("Bfarm Agriculture",), ("Bfarm Agriculture",)),
+				"UPDATE `tabWorkspace` SET restrict_to_domain = NULL, is_hidden = 0, public = 1, for_user = NULL WHERE name LIKE '%Bfarm Agriculture%' OR title LIKE '%Bfarm Agriculture%'"
 			)
 			frappe.db.commit()
 		except Exception:

@@ -122,45 +122,9 @@ $(document).ready(function() {
         }
     }
 
-    // Đăng ký sớm workspace bfarm-agriculture vào frappe.workspaces map để router nhận diện đúng workspace (tránh lỗi Not found)
-    let populate_workspace_route_early = function() {
-        if (typeof frappe !== "undefined") {
-            if (!frappe.workspaces) frappe.workspaces = {};
-            if (!frappe.workspaces["bfarm-agriculture"]) {
-                frappe.workspaces["bfarm-agriculture"] = {
-                    name: "Bfarm Agriculture",
-                    title: "Bfarm Agriculture",
-                    public: 1
-                };
-            }
-            if (!frappe.workspaces["Bfarm Agriculture"]) {
-                frappe.workspaces["Bfarm Agriculture"] = frappe.workspaces["bfarm-agriculture"];
-            }
-        }
-    };
-    populate_workspace_route_early();
-
-    // Tự động đóng popup thông báo 404 cũ nếu xuất hiện
-    let dismiss_not_found_popups = function() {
-        $(".msgprint-dialog, .modal-dialog, .modal, div[role='dialog']").each(function() {
-            let $dialog = $(this);
-            let txt = $dialog.text();
-            if (txt.indexOf("bfarm-agriculture not found") !== -1 ||
-                txt.indexOf("Page /desk/bfarm-agriculture") !== -1 ||
-                txt.indexOf("Page bfarm-agriculture") !== -1) {
-                let $modal = $dialog.closest(".modal");
-                if (!$modal.length) $modal = $dialog;
-                $modal.modal("hide");
-                $modal.remove();
-                $(".modal-backdrop").remove();
-            }
-        });
-    };
-
-    // Chỉ tự động chuyển sang bfarm-agriculture khi thực sự ở màn hình Desktop (3 icon)
+    // Tự động chuyển về bfarm-agriculture khi truy cập màn hình Desktop 3 icon
     let is_redirecting = false;
     let check_and_redirect_home = function() {
-        populate_workspace_route_early();
         if (is_redirecting) return;
         if (!frappe.session || !frappe.session.user || frappe.session.user === "Guest") return;
 
@@ -193,20 +157,13 @@ $(document).ready(function() {
         }
     };
 
-    // Chỉ bắt sự kiện desktop_screen (khi trang 3 icon vừa render) và app_ready ban đầu
+    // Lắng nghe sự kiện render màn hình Desktop (3 icon)
     $(document).on("desktop_screen", function() {
-        dismiss_not_found_popups();
         check_and_redirect_home();
     });
 
     $(document).one("app_ready", function() {
-        populate_workspace_route_early();
         check_and_redirect_home();
-    });
-
-    $(document).on("page-change", function() {
-        populate_workspace_route_early();
-        dismiss_not_found_popups();
     });
 
     // ==========================================
