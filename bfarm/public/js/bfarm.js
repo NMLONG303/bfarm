@@ -122,9 +122,26 @@ $(document).ready(function() {
         }
     }
 
+    // Đảm bảo frappe.workspaces luôn ánh xạ đúng các workspace thật từ frappe.boot.workspaces.pages
+    let sync_workspaces_from_boot = function() {
+        if (typeof frappe !== "undefined" && frappe.boot && frappe.boot.workspaces && frappe.boot.workspaces.pages) {
+            if (!frappe.workspaces) frappe.workspaces = {};
+            frappe.boot.workspaces.pages.forEach(function(page) {
+                if (page && page.name) {
+                    let slug = page.name.toLowerCase().replace(/ /g, "-");
+                    frappe.workspaces[slug] = page;
+                    frappe.workspaces[page.name] = page;
+                }
+            });
+        }
+    };
+    sync_workspaces_from_boot();
+    $(document).on("app_ready page-change toolbar_setup", sync_workspaces_from_boot);
+
     // Tự động chuyển về bfarm-agriculture khi truy cập màn hình Desktop 3 icon
     let is_redirecting = false;
     let check_and_redirect_home = function() {
+        sync_workspaces_from_boot();
         if (is_redirecting) return;
         if (!frappe.session || !frappe.session.user || frappe.session.user === "Guest") return;
 
@@ -159,10 +176,12 @@ $(document).ready(function() {
 
     // Lắng nghe sự kiện render màn hình Desktop (3 icon)
     $(document).on("desktop_screen", function() {
+        sync_workspaces_from_boot();
         check_and_redirect_home();
     });
 
     $(document).one("app_ready", function() {
+        sync_workspaces_from_boot();
         check_and_redirect_home();
     });
 
