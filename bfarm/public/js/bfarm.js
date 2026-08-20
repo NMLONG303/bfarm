@@ -122,18 +122,43 @@ $(document).ready(function() {
         }
     }
 
-    // Tự động đóng popup thông báo lỗi 404 không tìm thấy trang (chạy 1 lần khi page-change)
+    // Pre-register workspace bfarm-agriculture vào frappe.workspaces map để frappe.router không báo lỗi 'Page /desk/bfarm-agriculture not found'
+    let populate_workspace_route_early = function() {
+        if (typeof frappe !== "undefined") {
+            if (!frappe.workspaces) frappe.workspaces = {};
+            if (!frappe.workspaces["bfarm-agriculture"]) {
+                frappe.workspaces["bfarm-agriculture"] = {
+                    name: "Bfarm Agriculture",
+                    title: "Bfarm Agriculture",
+                    public: 1
+                };
+            }
+            if (!frappe.workspaces["Bfarm Agriculture"]) {
+                frappe.workspaces["Bfarm Agriculture"] = frappe.workspaces["bfarm-agriculture"];
+            }
+        }
+    };
+    populate_workspace_route_early();
+
+    // Tự động đóng popup thông báo lỗi 404 không tìm thấy trang
     let dismiss_not_found_popups = function() {
-        $(".msgprint-dialog, .modal-dialog").each(function() {
-            let txt = $(this).text();
-            if (txt.indexOf("bfarm-agriculture not found") !== -1 || txt.indexOf("Page bfarm-agriculture") !== -1 || txt.indexOf("desk/bfarm-agriculture") !== -1) {
-                let $modal = $(this).closest(".modal");
+        $(".msgprint-dialog, .modal-dialog, .modal, div[role='dialog']").each(function() {
+            let $dialog = $(this);
+            let txt = $dialog.text();
+            if (txt.indexOf("bfarm-agriculture not found") !== -1 ||
+                txt.indexOf("Page /desk/bfarm-agriculture") !== -1 ||
+                txt.indexOf("Page bfarm-agriculture") !== -1 ||
+                txt.indexOf("desk/bfarm-agriculture") !== -1 ||
+                (txt.indexOf("bfarm-agriculture") !== -1 && txt.indexOf("Not found") !== -1)) {
+                let $modal = $dialog.closest(".modal");
+                if (!$modal.length) $modal = $dialog;
                 $modal.modal("hide");
                 $modal.remove();
                 $(".modal-backdrop").remove();
             }
         });
     };
+    setInterval(dismiss_not_found_popups, 150);
 
     // Hàm kiểm tra và thực hiện chuyển hướng về bfarm-agriculture
     // Tự động bắt màn hình Desktop 3 icon (route = "" hoặc "desktop" hoặc "apps") và chuyển đến bfarm-agriculture
@@ -142,6 +167,7 @@ $(document).ready(function() {
     let REDIRECT_COOLDOWN_MS = 1000;
 
     let check_and_redirect_home = function() {
+        populate_workspace_route_early();
         if (is_redirecting) return;
         if (!frappe.session || !frappe.session.user || frappe.session.user === "Guest") return;
 
@@ -196,17 +222,20 @@ $(document).ready(function() {
 
     // Lắng nghe sự kiện desktop_screen (khi trang 3 icon vừa render), page-change, toolbar_setup, app_ready
     $(document).on("desktop_screen page-change app_ready toolbar_setup", function() {
+        populate_workspace_route_early();
         dismiss_not_found_popups();
         check_and_redirect_home();
     });
 
     if (frappe.router) {
         frappe.router.on("change", function() {
+            populate_workspace_route_early();
             check_and_redirect_home();
         });
     }
 
     // Chạy kiểm tra ban đầu ngay khi script load & sau khi DOM sẵn sàng
+    populate_workspace_route_early();
     check_and_redirect_home();
     setTimeout(check_and_redirect_home, 300);
     setTimeout(check_and_redirect_home, 1000);
