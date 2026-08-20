@@ -60,7 +60,7 @@ $(document).ready(function() {
         if (brand.length) {
             brand.empty();
         }
-        $(".app-logo").attr("src", "/assets/bfarm/images/logo.png");
+        $(".navbar .app-logo, .navbar-brand .app-logo").attr("src", "/assets/bfarm/images/logo.png");
     };
 
     // Tự động thay đổi logo và ép bản dịch tiếng Việt trực tiếp cho trang Đăng nhập (/login)

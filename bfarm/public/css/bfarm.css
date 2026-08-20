@@ -23,8 +23,8 @@
     width: auto !important;
 }
 
-/* Ghi đè tuyệt đối logo ERPNext / Frappe trên toàn bộ giao diện Desk & Dock Rail */
-img[src*="erpnext-logo"], img[src*="frappe-framework-logo"], .workspace-dock-logo img, .workspace-dock-logo a img {
+/* Custom logo cho Workspace Dock Rail */
+.workspace-dock-logo img, .workspace-dock-logo a img {
     content: url("/assets/bfarm/images/logo.png") !important;
     max-height: 28px !important;
     max-width: 28px !important;
