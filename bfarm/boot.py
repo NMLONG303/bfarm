@@ -3,17 +3,16 @@ import frappe
 def boot_session(bootinfo):
 	"""
 	Hook chạy mỗi khi khởi tạo phiên làm việc (session boot).
-	Chỉ cập nhật logo và thương hiệu Bfarm, giữ nguyên điều hướng mặc định của hệ thống.
+	Chỉ cập nhật logo và thương hiệu cho riêng app Bfarm, giữ nguyên logo chuẩn của ERPNext và Framework.
 	"""
 	if frappe.session.user and frappe.session.user != "Guest":
 		bootinfo.app_logo_url = "/assets/bfarm/images/logo.png"
 
 		if hasattr(bootinfo, "app_data") and bootinfo.app_data:
 			for app in bootinfo.app_data:
-				app["app_logo_url"] = "/assets/bfarm/images/logo.png"
 				if app.get("app_name") == "bfarm":
 					app["app_title"] = "Bfarm"
-				if "logo" in app:
+					app["app_logo_url"] = "/assets/bfarm/images/logo.png"
 					app["logo"] = "/assets/bfarm/images/logo.png"
 
 def update_website_context(context):
