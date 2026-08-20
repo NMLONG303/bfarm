@@ -131,7 +131,7 @@ $(document).ready(function() {
         window.location.replace(new_path);
     }
 
-    // Tự động đóng popup thông báo lỗi 404 không tìm thấy trang
+    // Tự động đóng popup thông báo lỗi 404 không tìm thấy trang (chạy 1 lần khi page-change)
     let dismiss_not_found_popups = function() {
         $(".msgprint-dialog, .modal-dialog").each(function() {
             let txt = $(this).text();
@@ -143,37 +143,47 @@ $(document).ready(function() {
             }
         });
     };
-    setInterval(dismiss_not_found_popups, 300);
 
     // Hàm kiểm tra và thực hiện chuyển hướng về bfarm-agriculture
+    // Sử dụng cơ chế debounce + timestamp để tránh vòng lặp vô hạn
     let is_redirecting = false;
+    let last_redirect_ts = 0;
+    let REDIRECT_COOLDOWN_MS = 3000; // Tối thiểu 3 giây giữa các lần redirect
+
     let check_and_redirect_home = function() {
         if (is_redirecting) return;
         if (!frappe.session || !frappe.session.user || frappe.session.user === "Guest") return;
+
+        let now = Date.now();
+        if (now - last_redirect_ts < REDIRECT_COOLDOWN_MS) return;
 
         let current_route = frappe.get_route_str ? frappe.get_route_str().toLowerCase() : "";
         let route_arr = frappe.get_route ? frappe.get_route() : [];
         let first_route = route_arr.length ? String(route_arr[0]).toLowerCase() : "";
 
-        let is_target = current_route.indexOf("bfarm-agriculture") !== -1 || 
-            first_route === "bfarm-agriculture" || 
+        // Nếu route trống (trang đang chuyển tiếp / loading) → KHÔNG redirect, để Frappe tự xử lý
+        if (!current_route && !first_route) return;
+
+        let is_target = current_route.indexOf("bfarm-agriculture") !== -1 ||
+            first_route === "bfarm-agriculture" ||
             (route_arr.length > 1 && String(route_arr[1]).toLowerCase() === "bfarm agriculture");
+
+        // Nếu đã ở đúng workspace Bfarm Agriculture thì dừng lại
+        if (is_target) return;
+
+        // Chỉ redirect khi thực sự ở desktop/apps/home
+        let is_desktop_route = first_route === "desktop" ||
+            first_route === "apps" ||
+            first_route === "home" ||
+            current_route === "desktop" ||
+            current_route === "apps" ||
+            current_route === "home";
 
         let is_desktop_dom = $(".desktop-container").length > 0 || $(".icons-container").length > 0;
 
-        // Nếu đã ở đúng workspace Bfarm Agriculture và KHÔNG bị vướng Desktop DOM thì dừng lại
-        if (is_target && !is_desktop_dom) return;
-
-        let is_desktop_route = first_route === "desktop" || 
-            first_route === "apps" || 
-            first_route === "home" || 
-            current_route === "desktop" || 
-            current_route === "apps" || 
-            current_route === "home" || 
-            !current_route;
-
         if (is_desktop_route || is_desktop_dom) {
             is_redirecting = true;
+            last_redirect_ts = Date.now();
             console.log("[Bfarm Redirect] Intercepted desktop screen -> switching to bfarm-agriculture workspace...");
             try {
                 localStorage.removeItem("session_last_route");
@@ -194,21 +204,16 @@ $(document).ready(function() {
         }
     };
 
-    // 1. Chuyển hướng khi app sẵn sàng & khi trang chuyển
-    $(document).on("app_ready page-change toolbar_setup", function() {
+    // Chỉ lắng nghe page-change - tránh lắng nghe quá nhiều event gây xung đột
+    $(document).on("page-change", function() {
+        dismiss_not_found_popups();
         check_and_redirect_home();
     });
 
-    // 2. Chặn Router change khi bất kỳ nút nào (như Logo/Home) kích hoạt route "home"
-    if (frappe.router) {
-        frappe.router.on("change", function() {
-            check_and_redirect_home();
-        });
-    }
-
-    // 3. Chạy kiểm tra ban đầu lúc nạp
-    check_and_redirect_home();
-    setTimeout(check_and_redirect_home, 300);
+    // Chạy kiểm tra ban đầu 1 lần khi app sẵn sàng
+    $(document).one("app_ready", function() {
+        check_and_redirect_home();
+    });
 
     // ==========================================
     // Custom Geolocation Map Zoom (Override)
