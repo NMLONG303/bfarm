@@ -138,53 +138,6 @@ $(document).ready(function() {
     sync_workspaces_from_boot();
     $(document).on("app_ready page-change toolbar_setup", sync_workspaces_from_boot);
 
-    // Tự động chuyển về bfarm-agriculture khi truy cập màn hình Desktop 3 icon
-    let is_redirecting = false;
-    let check_and_redirect_home = function() {
-        sync_workspaces_from_boot();
-        if (is_redirecting) return;
-        if (!frappe.session || !frappe.session.user || frappe.session.user === "Guest") return;
-
-        let current_route = frappe.get_route_str ? frappe.get_route_str().toLowerCase() : "";
-        let route_arr = frappe.get_route ? frappe.get_route() : [];
-        let first_route = route_arr.length ? String(route_arr[0]).toLowerCase() : "";
-
-        // CHỈ redirect khi đang thực sự ở màn hình Desktop / Apps (route = "desktop" hoặc "apps")
-        let is_desktop_screen = first_route === "desktop" || first_route === "apps" || current_route === "desktop" || current_route === "apps";
-
-        if (is_desktop_screen) {
-            is_redirecting = true;
-            console.log("[Bfarm Redirect] Intercepted desktop screen -> switching to bfarm-agriculture workspace...");
-            try {
-                localStorage.removeItem("session_last_route");
-            } catch(e) {}
-
-            $(".desktop-container, .icons-container").remove();
-            $("#page-desktop").hide();
-
-            if (frappe.set_route) {
-                frappe.set_route("bfarm-agriculture").then(function() {
-                    is_redirecting = false;
-                }).catch(function() {
-                    is_redirecting = false;
-                });
-            } else {
-                is_redirecting = false;
-            }
-        }
-    };
-
-    // Lắng nghe sự kiện render màn hình Desktop (3 icon)
-    $(document).on("desktop_screen", function() {
-        sync_workspaces_from_boot();
-        check_and_redirect_home();
-    });
-
-    $(document).one("app_ready", function() {
-        sync_workspaces_from_boot();
-        check_and_redirect_home();
-    });
-
     // ==========================================
     // Custom Geolocation Map Zoom (Override)
     // ==========================================
