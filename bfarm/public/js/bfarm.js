@@ -37,7 +37,7 @@ $(document).ready(function() {
                     if (this.$logo) {
                         this.$logo.empty();
                         let $link = $(
-                            `<a href="/app/bfarm-agriculture" title="${frappe.utils.escape_html(title)}" aria-label="Bfarm" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
+                            `<a href="/desk/bfarm-agriculture" title="${frappe.utils.escape_html(title)}" aria-label="Bfarm" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
                                 <img src="${logo_url}" alt="Bfarm Logo" style="max-height: 28px; width: auto; object-fit: contain;" />
                             </a>`
                         );
@@ -120,15 +120,6 @@ $(document).ready(function() {
         if (last_route && (last_route.indexOf("desktop") !== -1 || last_route.indexOf("apps") !== -1 || last_route === "desk")) {
             localStorage.removeItem("session_last_route");
         }
-    }
-
-    // Tự động chuyển hướng nếu đang ở URL cũ /desk/
-    if (window.location.pathname.indexOf("/desk/") !== -1) {
-        let new_path = window.location.pathname.replace("/desk/", "/app/");
-        if (window.location.pathname.indexOf("bfarm-agriculture") === -1 && !window.location.hash) {
-            new_path = "/app/bfarm-agriculture";
-        }
-        window.location.replace(new_path);
     }
 
     // Tự động đóng popup thông báo lỗi 404 không tìm thấy trang (chạy 1 lần khi page-change)

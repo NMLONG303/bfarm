@@ -10,15 +10,15 @@ app_email = "contact@beeyond.com"
 app_license = "MIT"
 app_logo_url = "/assets/bfarm/images/logo.png"
 favicon = "/assets/bfarm/images/logo.png"
-app_home = "/app/bfarm-agriculture"
+app_home = "/desk/bfarm-agriculture"
 
-# Khai báo bfarm trên apps screen để Frappe Server định tuyến đăng nhập thẳng về /app/bfarm-agriculture
+# Khai báo bfarm trên apps screen để Frappe Server định tuyến đăng nhập thẳng về /desk/bfarm-agriculture
 add_to_apps_screen = [
 	{
 		"name": "bfarm",
 		"logo": "/assets/bfarm/images/logo.png",
 		"title": "Bfarm",
-		"route": "/app/bfarm-agriculture",
+		"route": "/desk/bfarm-agriculture",
 		"sequence_id": 1,
 	}
 ]
@@ -47,17 +47,17 @@ update_website_context = "bfarm.bfarm.boot.update_website_context"
 # ----------
 
 # application home page
-home_page = "/app/bfarm-agriculture"
+home_page = "/desk/bfarm-agriculture"
 
 # website user home page (by Role)
-# => get_home_page() trả "app/bfarm-agriculture" cho tất cả người dùng hệ thống,
+# => get_home_page() trả "desk/bfarm-agriculture" cho tất cả người dùng hệ thống,
 # khiến sau đăng nhập (auth.py set_user_info -> login.js data.home_page) đi thẳng
 # về workspace Bfarm Agriculture.
 role_home_page = {
-	"System Manager": "/app/bfarm-agriculture",
-	"Administrator": "/app/bfarm-agriculture",
-	"Agriculture User": "/app/bfarm-agriculture",
-	"All": "/app/bfarm-agriculture"
+	"System Manager": "/desk/bfarm-agriculture",
+	"Administrator": "/desk/bfarm-agriculture",
+	"Agriculture User": "/desk/bfarm-agriculture",
+	"All": "/desk/bfarm-agriculture"
 }
 
 # Session Boot Hook
