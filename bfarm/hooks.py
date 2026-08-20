@@ -16,7 +16,7 @@ add_to_apps_screen = [
 		"name": "bfarm",
 		"logo": "/assets/bfarm/images/logo.png",
 		"title": "Bfarm",
-		"route": "/desk",
+		"route": "/desk/bfarm-agriculture",
 		"sequence_id": 1,
 	}
 ]
