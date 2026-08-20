@@ -135,23 +135,8 @@ $(document).ready(function() {
             });
         }
     };
-    // Tự động ẩn icon ERPNext khỏi màn hình Desktop (chỉ hiển thị 2 icon: Bfarm và Framework)
-    let hide_erpnext_desktop_icon = function() {
-        $(".desktop-icon, .app-icon-item, .app-item, a[href*='erpnext']").each(function() {
-            let $el = $(this);
-            let txt = $el.text().trim();
-            if (txt === "ERPNext" || $el.attr("href") === "/desk/build" || $el.find(".app-title, span, p").text().trim() === "ERPNext") {
-                $el.closest(".desktop-icon, .app-item, a").remove();
-            }
-        });
-    };
-
-    $(document).on("desktop_screen page-change app_ready", function() {
-        sync_workspaces_from_boot();
-        hide_erpnext_desktop_icon();
-        setTimeout(hide_erpnext_desktop_icon, 100);
-        setTimeout(hide_erpnext_desktop_icon, 300);
-    });
+    sync_workspaces_from_boot();
+    $(document).on("app_ready page-change toolbar_setup", sync_workspaces_from_boot);
 
     // ==========================================
     // Custom Geolocation Map Zoom (Override)
