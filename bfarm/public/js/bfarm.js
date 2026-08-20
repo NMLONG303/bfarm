@@ -122,7 +122,7 @@ $(document).ready(function() {
         }
     }
 
-    // Pre-register workspace bfarm-agriculture vào frappe.workspaces map để frappe.router không báo lỗi 'Page /desk/bfarm-agriculture not found'
+    // Đăng ký sớm workspace bfarm-agriculture vào frappe.workspaces map để router nhận diện đúng workspace (tránh lỗi Not found)
     let populate_workspace_route_early = function() {
         if (typeof frappe !== "undefined") {
             if (!frappe.workspaces) frappe.workspaces = {};
@@ -140,16 +140,14 @@ $(document).ready(function() {
     };
     populate_workspace_route_early();
 
-    // Tự động đóng popup thông báo lỗi 404 không tìm thấy trang
+    // Tự động đóng popup thông báo 404 cũ nếu xuất hiện
     let dismiss_not_found_popups = function() {
         $(".msgprint-dialog, .modal-dialog, .modal, div[role='dialog']").each(function() {
             let $dialog = $(this);
             let txt = $dialog.text();
             if (txt.indexOf("bfarm-agriculture not found") !== -1 ||
                 txt.indexOf("Page /desk/bfarm-agriculture") !== -1 ||
-                txt.indexOf("Page bfarm-agriculture") !== -1 ||
-                txt.indexOf("desk/bfarm-agriculture") !== -1 ||
-                (txt.indexOf("bfarm-agriculture") !== -1 && txt.indexOf("Not found") !== -1)) {
+                txt.indexOf("Page bfarm-agriculture") !== -1) {
                 let $modal = $dialog.closest(".modal");
                 if (!$modal.length) $modal = $dialog;
                 $modal.modal("hide");
@@ -158,48 +156,23 @@ $(document).ready(function() {
             }
         });
     };
-    setInterval(dismiss_not_found_popups, 150);
 
-    // Hàm kiểm tra và thực hiện chuyển hướng về bfarm-agriculture
-    // Tự động bắt màn hình Desktop 3 icon (route = "" hoặc "desktop" hoặc "apps") và chuyển đến bfarm-agriculture
+    // Chỉ tự động chuyển sang bfarm-agriculture khi thực sự ở màn hình Desktop (3 icon)
     let is_redirecting = false;
-    let last_redirect_ts = 0;
-    let REDIRECT_COOLDOWN_MS = 1000;
-
     let check_and_redirect_home = function() {
         populate_workspace_route_early();
         if (is_redirecting) return;
         if (!frappe.session || !frappe.session.user || frappe.session.user === "Guest") return;
 
-        let now = Date.now();
-        if (now - last_redirect_ts < REDIRECT_COOLDOWN_MS) return;
-
         let current_route = frappe.get_route_str ? frappe.get_route_str().toLowerCase() : "";
         let route_arr = frappe.get_route ? frappe.get_route() : [];
         let first_route = route_arr.length ? String(route_arr[0]).toLowerCase() : "";
 
-        let is_target = current_route.indexOf("bfarm-agriculture") !== -1 ||
-            first_route === "bfarm-agriculture" ||
-            (route_arr.length > 1 && String(route_arr[1]).toLowerCase() === "bfarm agriculture");
+        // CHỈ redirect khi đang thực sự ở màn hình Desktop / Apps (route = "desktop" hoặc "apps")
+        let is_desktop_screen = first_route === "desktop" || first_route === "apps" || current_route === "desktop" || current_route === "apps";
 
-        // Nếu đã ở đúng workspace Bfarm Agriculture thì dừng lại
-        if (is_target) return;
-
-        // Bắt màn hình Desktop 3 icon: first_route hoặc current_route là "", "desktop", "apps", "home"
-        let is_desktop_route = first_route === "desktop" ||
-            first_route === "apps" ||
-            first_route === "home" ||
-            first_route === "" ||
-            current_route === "desktop" ||
-            current_route === "apps" ||
-            current_route === "home" ||
-            current_route === "";
-
-        let is_desktop_dom = $(".desktop-container").length > 0 || $(".icons-container").length > 0 || $(".apps-screen").length > 0;
-
-        if (is_desktop_route || is_desktop_dom) {
+        if (is_desktop_screen) {
             is_redirecting = true;
-            last_redirect_ts = Date.now();
             console.log("[Bfarm Redirect] Intercepted desktop screen -> switching to bfarm-agriculture workspace...");
             try {
                 localStorage.removeItem("session_last_route");
@@ -220,25 +193,21 @@ $(document).ready(function() {
         }
     };
 
-    // Lắng nghe sự kiện desktop_screen (khi trang 3 icon vừa render), page-change, toolbar_setup, app_ready
-    $(document).on("desktop_screen page-change app_ready toolbar_setup", function() {
-        populate_workspace_route_early();
+    // Chỉ bắt sự kiện desktop_screen (khi trang 3 icon vừa render) và app_ready ban đầu
+    $(document).on("desktop_screen", function() {
         dismiss_not_found_popups();
         check_and_redirect_home();
     });
 
-    if (frappe.router) {
-        frappe.router.on("change", function() {
-            populate_workspace_route_early();
-            check_and_redirect_home();
-        });
-    }
+    $(document).one("app_ready", function() {
+        populate_workspace_route_early();
+        check_and_redirect_home();
+    });
 
-    // Chạy kiểm tra ban đầu ngay khi script load & sau khi DOM sẵn sàng
-    populate_workspace_route_early();
-    check_and_redirect_home();
-    setTimeout(check_and_redirect_home, 300);
-    setTimeout(check_and_redirect_home, 1000);
+    $(document).on("page-change", function() {
+        populate_workspace_route_early();
+        dismiss_not_found_popups();
+    });
 
     // ==========================================
     // Custom Geolocation Map Zoom (Override)
